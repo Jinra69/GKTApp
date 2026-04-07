@@ -1,0 +1,209 @@
+<ion-content [fullscreen]="true" class="login-content">
+
+  <div class="bg-gradient"></div>
+  <div class="bg-glow"></div>
+
+  <div class="screen-wrapper">
+
+    <!-- ── TOP SECTION ── -->
+    <div class="top-section">
+      <div class="logo-wrap">
+        <img src="../../assets/gkt.png" alt="Logo GKT" class="church-logo" />
+        <div class="logo-glow"></div>
+      </div>
+      <h1 class="church-name">Gereja Kristus Tuhan</h1>
+      <p class="church-sub">Selamat datang, saudara dalam Kristus</p>
+      <div class="gold-line"></div>
+    </div>
+
+    <!-- ── FORM CARD ── -->
+    <div class="form-section">
+
+      <div class="tab-bar" [class.tab-locked]="showOtpStep">
+        <button class="tab-btn" [class.active]="!isLogin" (click)="!showOtpStep && (isLogin = false)">Daftar</button>
+        <button class="tab-btn" [class.active]="isLogin" (click)="!showOtpStep && (isLogin = true)">Masuk</button>
+        <div class="tab-indicator" [class.right]="isLogin"></div>
+      </div>
+
+      <!-- ════ FORM DAFTAR ════ -->
+      <div class="form-body" [class.hidden]="isLogin || showOtpStep">
+
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <ion-input class="field" type="text" placeholder="Nama lengkap" [(ngModel)]="name"></ion-input>
+        </div>
+
+        <!-- ── Pilih Gereja (select trigger) ── -->
+        <div class="input-wrap church-select-trigger" (click)="openChurchPopup()">
+          <span class="input-icon">⛪</span>
+          <span class="church-select-text" *ngIf="selectedCcName">{{ selectedCcName }}</span>
+          <span class="church-select-text placeholder" *ngIf="!selectedCcName">Pilih gereja</span>
+          <span class="church-select-arrow">
+            <ng-container *ngIf="churchLoading">⏳</ng-container>
+            <ng-container *ngIf="!churchLoading">▾</ng-container>
+          </span>
+        </div>
+
+        <div class="input-wrap">
+          <span class="input-icon">✉️</span>
+          <ion-input class="field" type="email" placeholder="Alamat email" [(ngModel)]="email"></ion-input>
+        </div>
+        <div class="input-wrap">
+          <span class="input-icon">📱</span>
+          <ion-input class="field" type="tel" placeholder="Nomor telepon" [(ngModel)]="phone"></ion-input>
+        </div>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <ion-input class="field" type="password" placeholder="Password" [(ngModel)]="password"></ion-input>
+        </div>
+
+        <ion-button class="submit-btn" expand="block" (click)="register()">Buat Akun</ion-button>
+        <p class="hint-text">Sudah punya akun? <span (click)="isLogin = true">Masuk sekarang</span></p>
+
+        <div class="or-divider">
+          <div class="or-line"></div><span class="or-text">atau</span><div class="or-line"></div>
+        </div>
+        <button class="google-btn" (click)="loginWithGoogle()">
+          <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span>Masuk dengan Google</span>
+        </button>
+      </div>
+
+      <!-- ════ STEP OTP ════ -->
+      <div class="form-body otp-step" *ngIf="!isLogin && showOtpStep">
+
+        <div class="otp-header">
+          <div class="otp-icon">📧</div>
+          <h3 class="otp-title">Cek Email Kamu</h3>
+          <p class="otp-desc">
+            Kode verifikasi 6 digit telah dikirim ke<br>
+            <strong>{{ pendingRegister?.email }}</strong>
+          </p>
+        </div>
+
+        <!-- 6 kotak input digit OTP -->
+        <div class="otp-boxes-wrap">
+          <input
+            class="otp-input"
+            type="tel"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="······"
+            [(ngModel)]="otpCode"
+            (keyup.enter)="verifyOtp()"
+          />
+        </div>
+
+        <!-- Countdown -->
+        <div class="otp-countdown" *ngIf="!otpResendable">
+          <span>Kode berlaku selama </span>
+          <span class="otp-timer">{{ otpCountdownLabel }}</span>
+        </div>
+        <div class="otp-countdown expired" *ngIf="otpResendable">
+          Kode kedaluwarsa.
+        </div>
+
+        <ion-button class="submit-btn" expand="block" (click)="verifyOtp()">
+          ✅ Verifikasi Kode
+        </ion-button>
+
+        <div class="otp-actions">
+          <button class="otp-resend-btn" [disabled]="!otpResendable" (click)="resendOtp()">
+            🔄 Kirim Ulang Kode
+          </button>
+          <button class="otp-cancel-btn" (click)="cancelOtp()">
+            ← Kembali
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ════ FORM MASUK ════ -->
+      <div class="form-body" [class.hidden]="!isLogin">
+        <div class="input-wrap">
+          <span class="input-icon">✉️</span>
+          <ion-input class="field" type="email" placeholder="Alamat email" [(ngModel)]="email"></ion-input>
+        </div>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <ion-input class="field" type="password" placeholder="Password" [(ngModel)]="password"></ion-input>
+        </div>
+
+        <div class="remember-row">
+          <div class="remember-toggle" (click)="toggleRemember()">
+            <div class="toggle-track" [class.on]="rememberMe">
+              <div class="toggle-thumb"></div>
+            </div>
+            <span class="remember-label">Simpan Akun</span>
+          </div>
+          <p class="forgot-text">Lupa password?</p>
+        </div>
+
+        <ion-button class="submit-btn" expand="block" (click)="login()">Masuk</ion-button>
+        <p class="hint-text">Belum punya akun? <span (click)="isLogin = false">Daftar sekarang</span></p>
+
+        <div class="or-divider">
+          <div class="or-line"></div><span class="or-text">atau</span><div class="or-line"></div>
+        </div>
+        <button class="google-btn" (click)="loginWithGoogle()">
+          <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span>Masuk dengan Google</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════ POPUP PILIH GEREJA ════ -->
+  <div class="church-popup-overlay active" *ngIf="showChurchPopup" (click)="closeChurchPopup()">
+    <div class="church-popup-card" (click)="$event.stopPropagation()">
+
+      <div class="church-popup-header">
+        <h3 class="church-popup-title">⛪ Pilih Gereja</h3>
+        <button class="church-popup-close" (click)="closeChurchPopup()">✕</button>
+      </div>
+
+      <div class="church-search-wrap">
+        <span class="church-search-icon">🔍</span>
+        <input
+          class="church-search-input"
+          type="text"
+          placeholder="Cari nama gereja..."
+          [(ngModel)]="churchSearch"
+        />
+      </div>
+
+      <div class="church-list">
+
+        <div class="church-loading" *ngIf="churchLoading">
+          <div class="church-skeleton" *ngFor="let i of [1,2,3,4,5]"></div>
+        </div>
+
+        <div class="church-empty" *ngIf="!churchLoading && filteredChurches.length === 0">
+          <span>😔</span>
+          <p>Gereja tidak ditemukan</p>
+        </div>
+
+        <div class="church-item"
+             *ngFor="let church of filteredChurches"
+             [class.selected]="church.cc_id === selectedCcId"
+             (click)="selectChurch(church)">
+          <span class="church-item-name">{{ church.cc_name }}</span>
+          <span class="church-item-check" *ngIf="church.cc_id === selectedCcId">✓</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</ion-content>
