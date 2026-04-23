@@ -4,11 +4,10 @@
   <div class="ticker-bar" (click)="openAnnouncement()">
     <ion-icon name="megaphone-outline" class="ticker-icon"></ion-icon>
     <div class="ticker-track">
-      <div class="ticker-inner" *ngIf="!announcementsLoading"
+      <div class="ticker-inner"
+           *ngIf="!announcementsLoading"
+           [class.ticker-hidden]="!tickerVisible"
            [style.--ticker-duration]="tickerDuration">
-        <span class="ticker-text">{{ announcementText }}</span>
-        <span class="ticker-text">{{ announcementText }}</span>
-        <span class="ticker-text">{{ announcementText }}</span>
         <span class="ticker-text">{{ announcementText }}</span>
       </div>
       <!-- Skeleton saat loading -->
@@ -19,9 +18,6 @@
 
   <!-- ── MAIN SCROLL AREA ── -->
   <div class="page-body">
-  <!--<p style="color:red; font-size:12px;">
-    DEBUG CC_ID: {{ userCcId }}
-  </p>-->
     <!-- Greeting -->
     <div class="greeting-wrap">
       <div class="greeting-left">
@@ -41,10 +37,11 @@
         <div class="poster-skeleton"></div>
       </div>
 
-      <!-- Tidak ada poster -->
+      <!-- Tidak ada poster — tampil sebagai default state yang menarik -->
       <div class="poster-empty" *ngIf="!postersLoading && posters.length === 0">
-        <span>🖼️</span>
-        <p>Belum ada poster</p>
+        <div class="poster-empty-cross">✝</div>
+        <p class="poster-empty-title">Kabar Terbaru Segera Hadir</p>
+        <p class="poster-empty-sub">Pengumuman & poster gereja akan tampil di sini</p>
       </div>
 
       <!-- Slider poster dinamis -->
@@ -53,17 +50,17 @@
              (touchstart)="onPosterTouchStart($event)"
              (touchmove)="onPosterTouchMove($event)"
              (touchend)="onPosterTouchEnd()"
-             [style.transform]="'translateX(' + posterOffset + 'px)'">
+             [style.transform]="'translateX(' + (-(currentPosterIndex * 100)) + '%)'">
           <div class="poster-slide"
-               *ngFor="let poster of posters; let i = index"
-               (click)="openPosterPopup(i)">
-            <img [src]="poster.src" [alt]="poster.alt" class="poster-img" />
+               *ngFor="let poster of posters; let i = index; trackBy: trackByIndex"
+               (click)="openPosterZoom(poster.src, $event)">
+            <img [src]="poster.src" [alt]="poster.alt" class="poster-img" loading="lazy" />
           </div>
         </div>
         <!-- Dots hanya muncul kalau lebih dari 1 poster -->
         <div class="poster-dots" *ngIf="posters.length > 1">
           <span class="poster-dot"
-                *ngFor="let poster of posters; let i = index"
+                *ngFor="let poster of posters; let i = index; trackBy: trackByIndex"
                 [class.active]="i === currentPosterIndex"
                 (click)="goToPoster(i)">
           </span>
@@ -76,7 +73,7 @@
     <h2 class="section-title">Menu Utama</h2>
     <div class="menu-grid-home">
       <div class="menu-row-top">
-        <div class="menu-card-home" *ngFor="let item of menuItems.slice(0, 3)" (click)="openMenu(item)">
+        <div class="menu-card-home" *ngFor="let item of menuItems.slice(0, 3); trackBy: trackByMenuItem" (click)="openMenu(item)">
           <div class="menu-icon-wrap" [style.background]="item.bg">
             <span class="menu-emoji">{{ item.icon }}</span>
           </div>
@@ -85,7 +82,7 @@
         </div>
       </div>
       <div class="menu-row-bottom">
-        <div class="menu-card-home" *ngFor="let item of menuItems.slice(3, 5)" (click)="openMenu(item)">
+        <div class="menu-card-home" *ngFor="let item of menuItems.slice(3, 5); trackBy: trackByMenuItem" (click)="openMenu(item)">
           <div class="menu-icon-wrap" [style.background]="item.bg">
             <span class="menu-emoji">{{ item.icon }}</span>
           </div>
@@ -122,6 +119,113 @@
 
   </div><!-- end page-body -->
 
+  <!-- ── PENGUMUMAN PAGE ── -->
+  <div class="all-menus-page" [class.open]="showPengumumanPage">
+    <div class="all-menus-header">
+      <button class="back-btn" (click)="closePengumumanPage()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+      <h2 class="all-menus-title">Pengumuman</h2>
+    </div>
+
+    <!-- Loading -->
+    <div class="pengumuman-loading" *ngIf="pengumumanLoading">
+      <div class="pengumuman-skeleton" *ngFor="let i of [1,2,3]"></div>
+    </div>
+
+    <!-- List pengumuman per bulan → per dokumen -->
+    <div class="all-menus-body" *ngIf="!pengumumanLoading">
+      <div class="menu-group" *ngFor="let mg of pengumumanMonthGroups; trackBy: trackByMonth">
+        <h3 class="group-title"><span class="group-dot"></span>{{ mg.month }}</h3>
+        <div class="pengumuman-list">
+
+          <!-- ── Satu kartu per DOKUMEN ── -->
+          <div class="pengumuman-doc-card"
+               *ngFor="let doc of mg.docs; trackBy: trackByNounId"
+               (click)="openPengumumanDetail(doc)">
+
+            <!-- Poster slider otomatis -->
+            <div class="pengumuman-doc-slider" *ngIf="doc.posters.length > 0">
+              <div class="pengumuman-doc-track"
+                   [style.transform]="'translateX(' + (-(doc.currentPosterIndex) * 100) + '%)'">
+                <img class="pengumuman-doc-poster-img"
+                     *ngFor="let url of doc.posters; trackBy: trackByIndex"
+                     [src]="url"
+                     [alt]="doc.noun_title"
+                     loading="lazy"
+                     (click)="openPosterZoom(url, $event)" />
+              </div>
+              <!-- Dots -->
+              <div class="pengumuman-doc-dots" *ngIf="doc.posters.length > 1"
+                   (click)="$event.stopPropagation()">
+                <span class="pengumuman-doc-dot"
+                      *ngFor="let p of doc.posters; let i = index; trackBy: trackByIndex"
+                      [class.active]="i === doc.currentPosterIndex"
+                      (click)="goToDocPoster(doc, i)">
+                </span>
+              </div>
+              <!-- Zoom hint -->
+              <div class="poster-zoom-hint">🔍 Tap foto untuk perbesar</div>
+            </div>
+            <!-- Tidak ada poster -->
+            <div class="pengumuman-doc-no-poster" *ngIf="doc.posters.length === 0">
+              <span>📋</span>
+            </div>
+
+            <!-- Konten teks -->
+            <div class="pengumuman-card-body">
+              <p class="pengumuman-card-title">{{ doc.noun_title }}</p>
+              <p class="pengumuman-card-desc">{{ doc.noun_desc }}</p>
+              <span class="pengumuman-card-more">Selengkapnya →</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div class="church-empty" *ngIf="pengumumanMonthGroups.length === 0">
+        <span>📭</span>
+        <p>Belum ada pengumuman</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PENGUMUMAN DETAIL POPUP ── -->
+  <div class="popup-overlay" [class.active]="showPengumumanDetail" (click)="closePengumumanDetail()">
+    <div class="popup-card pengumuman-detail-card" (click)="$event.stopPropagation()" *ngIf="selectedPengumuman">
+      <div class="popup-header">
+        <div class="popup-badge">📢 Pengumuman</div>
+        <button class="popup-close" (click)="closePengumumanDetail()">✕</button>
+      </div>
+      <!-- Poster slider detail -->
+      <div class="pengumuman-detail-slider-wrap" *ngIf="selectedPengumuman.posters.length > 0">
+        <div class="pengumuman-detail-track"
+             [style.transform]="'translateX(' + (-(pengumumanDetailPosterIndex) * 100) + '%)'">
+          <img class="pengumuman-detail-poster"
+               [class.visible]="pengumumanDetailPosterVisible"
+               *ngFor="let url of selectedPengumuman.posters; trackBy: trackByIndex"
+               [src]="url"
+               [alt]="selectedPengumuman.noun_title"
+               (click)="openPosterZoom(url, $event)" />
+        </div>
+        <!-- Dots detail -->
+        <div class="pengumuman-detail-dots" *ngIf="selectedPengumuman.posters.length > 1">
+          <span class="poster-dot"
+                *ngFor="let p of selectedPengumuman.posters; let i = index; trackBy: trackByIndex"
+                [class.active]="i === pengumumanDetailPosterIndex"
+                (click)="goToDetailPoster(i)">
+          </span>
+        </div>
+        <!-- Zoom hint -->
+        <div class="poster-zoom-hint">🔍 Tap foto untuk perbesar</div>
+      </div>
+      <h2 class="popup-title">{{ selectedPengumuman.noun_title }}</h2>
+      <p class="popup-body" [innerHTML]="selectedPengumuman.noun_desc"></p>
+      <button class="popup-cta" (click)="closePengumumanDetail()">Tutup</button>
+    </div>
+  </div>
+
   <!-- ── ALL MENUS PAGE ── -->
   <div class="all-menus-page" [class.open]="showAllMenus">
     <div class="all-menus-header">
@@ -131,10 +235,10 @@
       <h2 class="all-menus-title">Semua Menu</h2>
     </div>
     <div class="all-menus-body">
-      <div class="menu-group" *ngFor="let group of menuGroups">
+      <div class="menu-group" *ngFor="let group of menuGroups; trackBy: trackByMenuGroup">
         <h3 class="group-title"><span class="group-dot"></span>{{ group.label }}</h3>
         <div class="mini-grid">
-          <div class="mini-card" *ngFor="let item of group.items" (click)="openMenu(item)">
+          <div class="mini-card" *ngFor="let item of group.items; trackBy: trackByMenuItem" (click)="openMenu(item)">
             <div class="mini-icon-wrap" [style.background]="item.bg">
               <span class="mini-emoji">{{ item.icon }}</span>
             </div>
@@ -168,15 +272,6 @@
       <h2 class="popup-title">{{ selectedMenu.name }}</h2>
       <p class="popup-body">{{ selectedMenu.detail }}</p>
       <button class="popup-cta" (click)="closeMenuPopup()">Tutup</button>
-    </div>
-  </div>
-
-  <!-- ── POSTER POPUP ── -->
-  <div class="poster-popup-overlay" [class.active]="showPosterPopup" (click)="closePosterPopup()">
-    <div class="poster-popup-inner" (click)="$event.stopPropagation()" *ngIf="selectedPoster">
-      <button class="poster-popup-close" (click)="closePosterPopup()">✕</button>
-      <img [src]="selectedPoster.src" [alt]="selectedPoster.alt" class="poster-popup-img" />
-      <p class="poster-popup-caption" *ngIf="selectedPoster.caption">{{ selectedPoster.caption }}</p>
     </div>
   </div>
 
@@ -250,6 +345,7 @@
           type="text"
           placeholder="Cari nama gereja..."
           [(ngModel)]="churchSearchQuery"
+          (ngModelChange)="onChurchSearchChange()"
         />
       </div>
 
@@ -312,6 +408,32 @@
                 (click)="confirmChurch()">
           <span *ngIf="!churchSaving">Ya, Lanjutkan ✓</span>
           <span *ngIf="churchSaving">Menyimpan...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- ── POSTER ZOOM POPUP ── -->
+  <div class="poster-zoom-overlay" [class.active]="showPosterZoom" (click)="closePosterZoom()">
+    <div class="poster-zoom-inner" (click)="$event.stopPropagation()"
+         (touchstart)="onPzTouchStart($event)"
+         (touchmove)="onPzTouchMove($event)">
+      <!-- Close -->
+      <button class="pz-close-btn" (click)="closePosterZoom()">✕</button>
+      <!-- Image -->
+      <div class="pz-img-wrap">
+        <img [src]="posterZoomUrl" class="pz-img"
+             [style.transform]="'scale(' + posterZoomScale + ')'" />
+      </div>
+      <!-- Controls -->
+      <div class="pz-controls" (click)="$event.stopPropagation()">
+        <button class="pz-btn" (click)="pzZoomOut()" [disabled]="posterZoomScale <= posterZoomMinScale">
+          <span>−</span>
+        </button>
+        <button class="pz-btn pz-reset" (click)="pzReset()">
+          {{ (posterZoomScale * 100).toFixed(0) }}%
+        </button>
+        <button class="pz-btn" (click)="pzZoomIn()" [disabled]="posterZoomScale >= posterZoomMaxScale">
+          <span>＋</span>
         </button>
       </div>
     </div>

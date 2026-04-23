@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">GKTApp</string>
     <string name="title_activity_main">GKTApp</string>
-    <string name="package_name">io.ionic.starter</string>
-    <string name="custom_url_scheme">io.ionic.starter</string>
-    <string name="server_client_id">652723815945-psubgn5miqkkmrsvn5469holn0a54ugk.apps.googleusercontent.com</string>
+    <string name="package_name">com.gktapp.mobile</string>
+    <string name="custom_url_scheme">com.gktapp.mobile</string>
 </resources>
