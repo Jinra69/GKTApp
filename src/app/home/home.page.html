@@ -1,28 +1,13 @@
+<!-- home/home.page.html -->
 <ion-content [fullscreen]="true" class="home-content">
 
-  <!-- ── ANNOUNCEMENT TICKER ── -->
-  <div class="ticker-bar" (click)="openAnnouncement()">
-    <ion-icon name="megaphone-outline" class="ticker-icon"></ion-icon>
-    <div class="ticker-track">
-      <div class="ticker-inner" *ngIf="!announcementsLoading"
-           [style.--ticker-duration]="tickerDuration">
-        <span class="ticker-text">{{ announcementText }}</span>
-        <span class="ticker-text">{{ announcementText }}</span>
-        <span class="ticker-text">{{ announcementText }}</span>
-        <span class="ticker-text">{{ announcementText }}</span>
-      </div>
-      <!-- Skeleton saat loading -->
-      <div class="ticker-skeleton" *ngIf="announcementsLoading"></div>
-    </div>
-    <ion-icon name="chevron-forward-outline" class="ticker-arrow"></ion-icon>
-  </div>
+  <app-announcement-ticker
+    [announcements]="announcements"
+    [loading]="announcementsLoading"
+    (clickAnnouncement)="onAnnouncementClick($event)">
+  </app-announcement-ticker>
 
-  <!-- ── MAIN SCROLL AREA ── -->
   <div class="page-body">
-  <!--<p style="color:red; font-size:12px;">
-    DEBUG CC_ID: {{ userCcId }}
-  </p>-->
-    <!-- Greeting -->
     <div class="greeting-wrap">
       <div class="greeting-left">
         <p class="greeting-hello">Halo, {{ userName }} 👋</p>
@@ -33,111 +18,55 @@
       </div>
     </div>
 
-    <!-- ── POSTER SLIDER ── -->
-    <div class="poster-slider-wrap">
+    <app-poster-slider
+      [posters]="posters"
+      [loading]="postersLoading"
+      (posterClick)="openPosterZoom($event)">
+    </app-poster-slider>
 
-      <!-- Loading skeleton poster -->
-      <div class="poster-skeleton-wrap" *ngIf="postersLoading">
-        <div class="poster-skeleton"></div>
-      </div>
-
-      <!-- Tidak ada poster -->
-      <div class="poster-empty" *ngIf="!postersLoading && posters.length === 0">
-        <span>🖼️</span>
-        <p>Belum ada poster</p>
-      </div>
-
-      <!-- Slider poster dinamis -->
-      <ng-container *ngIf="!postersLoading && posters.length > 0">
-        <div class="poster-track"
-             (touchstart)="onPosterTouchStart($event)"
-             (touchmove)="onPosterTouchMove($event)"
-             (touchend)="onPosterTouchEnd()"
-             [style.transform]="'translateX(' + posterOffset + 'px)'">
-          <div class="poster-slide"
-               *ngFor="let poster of posters; let i = index"
-               (click)="openPosterPopup(i)">
-            <img [src]="poster.src" [alt]="poster.alt" class="poster-img" />
-          </div>
-        </div>
-        <!-- Dots hanya muncul kalau lebih dari 1 poster -->
-        <div class="poster-dots" *ngIf="posters.length > 1">
-          <span class="poster-dot"
-                *ngFor="let poster of posters; let i = index"
-                [class.active]="i === currentPosterIndex"
-                (click)="goToPoster(i)">
-          </span>
-        </div>
-      </ng-container>
-
-    </div>
-
-    <!-- ── MENU UTAMA ── -->
     <h2 class="section-title">Menu Utama</h2>
     <div class="menu-grid-home">
       <div class="menu-row-top">
-        <div class="menu-card-home" *ngFor="let item of menuItems.slice(0, 3)" (click)="openMenu(item)">
-          <div class="menu-icon-wrap" [style.background]="item.bg">
-            <span class="menu-emoji">{{ item.icon }}</span>
-          </div>
+        <div class="menu-card-home" *ngFor="let item of menuItems.slice(0, 3); trackBy: trackByMenuItem" (click)="openMenu(item)">
+          <div class="menu-icon-wrap" [style.background]="item.bg"><span class="menu-emoji">{{ item.icon }}</span></div>
           <p class="menu-name">{{ item.name }}</p>
           <p class="menu-desc">{{ item.desc }}</p>
         </div>
       </div>
       <div class="menu-row-bottom">
-        <div class="menu-card-home" *ngFor="let item of menuItems.slice(3, 5)" (click)="openMenu(item)">
-          <div class="menu-icon-wrap" [style.background]="item.bg">
-            <span class="menu-emoji">{{ item.icon }}</span>
-          </div>
+        <div class="menu-card-home" *ngFor="let item of menuItems.slice(3, 5); trackBy: trackByMenuItem" (click)="openMenu(item)">
+          <div class="menu-icon-wrap" [style.background]="item.bg"><span class="menu-emoji">{{ item.icon }}</span></div>
           <p class="menu-name">{{ item.name }}</p>
           <p class="menu-desc">{{ item.desc }}</p>
         </div>
         <div class="menu-card-home menu-more" (click)="openAllMenus()">
-          <div class="menu-icon-wrap more-icon-wrap">
-            <ion-icon name="grid-outline" class="more-icon"></ion-icon>
-          </div>
+          <div class="menu-icon-wrap more-icon-wrap"><ion-icon name="grid-outline" class="more-icon"></ion-icon></div>
           <p class="menu-name">Lainnya</p>
           <p class="menu-desc">Semua menu</p>
         </div>
       </div>
     </div>
 
-    <!-- ── AYAT HARI INI ── -->
     <div class="verse-card" *ngIf="!verseLoading && verseText" (click)="openVersePopup()">
-      <div class="verse-card-header">
-        <span class="verse-label">✝️ Ayat Hari Ini</span>
-        <span class="verse-ref">{{ verseRef }}</span>
-      </div>
+      <div class="verse-card-header"><span class="verse-label">✝️ Ayat Hari Ini</span><span class="verse-ref">{{ verseRef }}</span></div>
       <p class="verse-text">"{{ verseText }}"</p>
       <div class="verse-tap-hint">Tap untuk renungkan ✨</div>
     </div>
     <div class="verse-card verse-skeleton" *ngIf="verseLoading">
-      <div class="verse-card-header">
-        <span class="verse-label">✝️ Ayat Hari Ini</span>
-      </div>
-      <div class="skeleton-line long"></div>
-      <div class="skeleton-line medium"></div>
-      <div class="skeleton-line short"></div>
+      <div class="verse-card-header"><span class="verse-label">✝️ Ayat Hari Ini</span></div>
+      <div class="skeleton-line long"></div><div class="skeleton-line medium"></div><div class="skeleton-line short"></div>
     </div>
+  </div>
 
-  </div><!-- end page-body -->
-
-  <!-- ── ALL MENUS PAGE ── -->
+  <!-- ALL MENUS PAGE -->
   <div class="all-menus-page" [class.open]="showAllMenus">
-    <div class="all-menus-header">
-      <button class="back-btn" (click)="closeAllMenus()">
-        <ion-icon name="arrow-back-outline"></ion-icon>
-      </button>
-      <h2 class="all-menus-title">Semua Menu</h2>
-    </div>
+    <div class="all-menus-header"><button class="back-btn" (click)="closeAllMenus()"><ion-icon name="arrow-back-outline"></ion-icon></button><h2 class="all-menus-title">Semua Menu</h2></div>
     <div class="all-menus-body">
-      <div class="menu-group" *ngFor="let group of menuGroups">
+      <div class="menu-group" *ngFor="let group of menuGroups; trackBy: trackByMenuGroup">
         <h3 class="group-title"><span class="group-dot"></span>{{ group.label }}</h3>
         <div class="mini-grid">
-          <div class="mini-card" *ngFor="let item of group.items" (click)="openMenu(item)">
-            <div class="mini-icon-wrap" [style.background]="item.bg">
-              <span class="mini-emoji">{{ item.icon }}</span>
-            </div>
+          <div class="mini-card" *ngFor="let item of group.items; trackBy: trackByMenuItem" (click)="openMenu(item)">
+            <div class="mini-icon-wrap" [style.background]="item.bg"><span class="mini-emoji">{{ item.icon }}</span></div>
             <p class="mini-name">{{ item.name }}</p>
           </div>
         </div>
@@ -145,47 +74,30 @@
     </div>
   </div>
 
-  <!-- ── ANNOUNCEMENT POPUP ── -->
+  <!-- ANNOUNCEMENT POPUP -->
   <div class="popup-overlay" [class.active]="showPopup" (click)="closePopup()">
     <div class="popup-card" (click)="$event.stopPropagation()">
-      <div class="popup-header">
-        <div class="popup-badge">📢 Pengumuman</div>
-        <button class="popup-close" (click)="closePopup()">✕</button>
-      </div>
+      <div class="popup-header"><div class="popup-badge">📢 Pengumuman</div><button class="popup-close" (click)="closePopup()">✕</button></div>
       <h2 class="popup-title">{{ popupTitle }}</h2>
       <p class="popup-body" [innerHTML]="formattedPopupBody"></p>
       <button class="popup-cta" (click)="closePopup()">Mengerti</button>
     </div>
   </div>
 
-  <!-- ── MENU DETAIL POPUP ── -->
+  <!-- MENU DETAIL POPUP -->
   <div class="popup-overlay" [class.active]="showMenuPopup" (click)="closeMenuPopup()">
     <div class="popup-card" (click)="$event.stopPropagation()" *ngIf="selectedMenu">
-      <div class="popup-header">
-        <div class="popup-badge" [style.background]="selectedMenu.bg">{{ selectedMenu.icon }} {{ selectedMenu.name }}</div>
-        <button class="popup-close" (click)="closeMenuPopup()">✕</button>
-      </div>
+      <div class="popup-header"><div class="popup-badge" [style.background]="selectedMenu.bg">{{ selectedMenu.icon }} {{ selectedMenu.name }}</div><button class="popup-close" (click)="closeMenuPopup()">✕</button></div>
       <h2 class="popup-title">{{ selectedMenu.name }}</h2>
       <p class="popup-body">{{ selectedMenu.detail }}</p>
       <button class="popup-cta" (click)="closeMenuPopup()">Tutup</button>
     </div>
   </div>
 
-  <!-- ── POSTER POPUP ── -->
-  <div class="poster-popup-overlay" [class.active]="showPosterPopup" (click)="closePosterPopup()">
-    <div class="poster-popup-inner" (click)="$event.stopPropagation()" *ngIf="selectedPoster">
-      <button class="poster-popup-close" (click)="closePosterPopup()">✕</button>
-      <img [src]="selectedPoster.src" [alt]="selectedPoster.alt" class="poster-popup-img" />
-      <p class="poster-popup-caption" *ngIf="selectedPoster.caption">{{ selectedPoster.caption }}</p>
-    </div>
-  </div>
-
-  <!-- ── VERSE POPUP ── -->
+  <!-- VERSE POPUP -->
   <div class="verse-popup-overlay" [class.active]="showVersePopup" (click)="closeVersePopup()">
     <div class="verse-popup-card" (click)="$event.stopPropagation()">
-      <div class="verse-popup-stars">
-        <span class="star s1">✦</span><span class="star s2">✦</span><span class="star s3">✦</span>
-      </div>
+      <div class="verse-popup-stars"><span class="star s1">✦</span><span class="star s2">✦</span><span class="star s3">✦</span></div>
       <button class="verse-popup-close" (click)="closeVersePopup()">✕</button>
       <div class="verse-popup-icon">✝️</div>
       <p class="verse-popup-label">Firman Tuhan Hari Ini</p>
@@ -194,125 +106,67 @@
       <p class="verse-popup-text">"{{ verseText }}"</p>
       <div class="verse-popup-divider"></div>
       <div class="verse-popup-actions">
-        <button class="verse-action-btn" (click)="copyVerse()">
-          <span>{{ verseCopied ? '✅' : '📋' }}</span>
-          <span>{{ verseCopied ? 'Tersalin!' : 'Salin' }}</span>
-        </button>
-        <button class="verse-action-btn" (click)="closeVersePopup()">
-          <span>🙏</span><span>Amin</span>
-        </button>
+        <button class="verse-action-btn" (click)="copyVerse()"><span>{{ verseCopied ? '✅' : '📋' }}</span><span>{{ verseCopied ? 'Tersalin!' : 'Salin' }}</span></button>
+        <button class="verse-action-btn" (click)="closeVersePopup()"><span>🙏</span><span>Amin</span></button>
       </div>
     </div>
   </div>
 
-  <!-- ── PROFILE POPUP ── -->
+  <!-- PROFILE POPUP -->
   <div class="profile-popup-overlay" [class.active]="showProfilePopup" (click)="closeProfilePopup()">
     <div class="profile-popup-card" (click)="$event.stopPropagation()">
-      <div class="profile-popup-logo-wrap">
-        <img src="../../assets/gkt.png" alt="GKT Logo" class="profile-popup-logo" />
-      </div>
+      <div class="profile-popup-logo-wrap"><img src="../../assets/gkt.png" alt="GKT Logo" class="profile-popup-logo" /></div>
       <p class="profile-popup-sinode">Sinode Gereja Kristus Tuhan</p>
       <div class="profile-popup-divider"></div>
-      <div class="profile-popup-account">
-        <span class="profile-popup-account-label">Nama Akun</span>
-        <span class="profile-popup-account-name">{{ userName }}</span>
-      </div>
-      <button class="profile-popup-btn btn-password" (click)="changePassword()">
-        <span class="profile-btn-icon">🔑</span>
-        <span>Ganti Kata Sandi</span>
-      </button>
-      <button class="profile-popup-btn btn-logout" (click)="logout()">
-        <span class="profile-btn-icon">🚪</span>
-        <span>Keluar</span>
-      </button>
+      <div class="profile-popup-account"><span class="profile-popup-account-label">Nama Akun</span><span class="profile-popup-account-name">{{ userName }}</span></div>
+      <button class="profile-popup-btn btn-password" (click)="changePassword()"><span class="profile-btn-icon">🔑</span><span>Ganti Kata Sandi</span></button>
+      <button class="profile-popup-btn btn-logout" (click)="logout()"><span class="profile-btn-icon">🚪</span><span>Keluar</span></button>
       <button class="profile-popup-close" (click)="closeProfilePopup()">✕</button>
     </div>
   </div>
 
-  <!-- ── CHURCH SELECTOR POPUP (wajib, tidak bisa ditutup) ── -->
+  <!-- CHURCH SELECTOR POPUP -->
   <div class="church-popup-overlay" [class.active]="showChurchPopup">
     <div class="church-popup-card">
-
-      <!-- Header -->
-      <div class="church-popup-header">
-        <div class="church-popup-logo-wrap">
-          <img src="../../assets/gkt.png" alt="GKT" class="church-popup-logo" />
-        </div>
-        <h2 class="church-popup-title">Pilih Gereja Anda</h2>
-        <p class="church-popup-subtitle">Langkah terakhir sebelum memulai. Pilih gereja tempat Anda berjemaat.</p>
-      </div>
-
-      <!-- Search -->
-      <div class="church-search-wrap">
-        <span class="church-search-icon">🔍</span>
-        <input
-          class="church-search-input"
-          type="text"
-          placeholder="Cari nama gereja..."
-          [(ngModel)]="churchSearchQuery"
-        />
-      </div>
-
-      <!-- List gereja -->
+      <div class="church-popup-header"><div class="church-popup-logo-wrap"><img src="../../assets/gkt.png" alt="GKT" class="church-popup-logo" /></div><h2 class="church-popup-title">Pilih Gereja Anda</h2><p class="church-popup-subtitle">Langkah terakhir sebelum memulai. Pilih gereja tempat Anda berjemaat.</p></div>
+      <div class="church-search-wrap"><span class="church-search-icon">🔍</span><input class="church-search-input" type="text" placeholder="Cari nama gereja..." [(ngModel)]="churchSearchQuery" (ngModelChange)="onChurchSearchChange()" /></div>
       <div class="church-list-wrap">
-        <!-- Loading -->
-        <div class="church-skeleton-list" *ngIf="churchesLoading">
-          <div class="church-skeleton-item" *ngFor="let i of [1,2,3,4,5]"></div>
-        </div>
-
-        <!-- Empty search result -->
-        <div class="church-empty" *ngIf="!churchesLoading && filteredChurches.length === 0">
-          <span>🏛️</span>
-          <p>Gereja tidak ditemukan</p>
-        </div>
-
-        <!-- List item -->
-        <div class="church-item"
-             *ngFor="let church of filteredChurches"
-             [class.selected]="selectedChurchId === church.cc_id"
-             (click)="selectChurch(church.cc_id)">
-          <div class="church-item-radio">
-            <div class="church-radio-inner" *ngIf="selectedChurchId === church.cc_id"></div>
-          </div>
-          <span class="church-item-name">{{ church.cc_name }}</span>
-          <span class="church-item-check" *ngIf="selectedChurchId === church.cc_id">✓</span>
+        <div class="church-skeleton-list" *ngIf="churchesLoading"><div class="church-skeleton-item" *ngFor="let i of [1,2,3,4,5]"></div></div>
+        <div class="church-empty" *ngIf="!churchesLoading && filteredChurches.length === 0"><span>🏛️</span><p>Gereja tidak ditemukan</p></div>
+        <div class="church-item" *ngFor="let church of filteredChurches" [class.selected]="selectedChurchId === church.cc_id" (click)="selectChurch(church.cc_id)">
+          <div class="church-item-radio"><div class="church-radio-inner" *ngIf="selectedChurchId === church.cc_id"></div></div>
+          <span class="church-item-name">{{ church.cc_name }}</span><span class="church-item-check" *ngIf="selectedChurchId === church.cc_id">✓</span>
         </div>
       </div>
-
-      <!-- Error -->
       <p class="church-error" *ngIf="churchSaveError">⚠️ {{ churchSaveError }}</p>
-
-      <!-- Confirm button -->
-      <button class="church-confirm-btn"
-              [disabled]="!selectedChurchId"
-              (click)="askConfirmChurch()">
-        Konfirmasi Pilihan 🙏
-      </button>
-
+      <button class="church-confirm-btn" [disabled]="!selectedChurchId" (click)="askConfirmChurch()">Konfirmasi Pilihan 🙏</button>
     </div>
   </div>
 
-  <!-- ── CHURCH CONFIRM DIALOG ── -->
+  <!-- CHURCH CONFIRM DIALOG -->
   <div class="church-confirm-overlay" [class.active]="showChurchConfirm">
     <div class="church-confirm-dialog" (click)="$event.stopPropagation()">
       <div class="church-confirm-icon">🏛️</div>
       <h3 class="church-confirm-title">Konfirmasi Pilihan Gereja</h3>
       <p class="church-confirm-desc">Apakah Anda yakin sudah memilih dengan benar?</p>
-      <div class="church-confirm-name-wrap">
-        <span class="church-confirm-name">{{ selectedChurchName }}</span>
-      </div>
+      <div class="church-confirm-name-wrap"><span class="church-confirm-name">{{ selectedChurchName }}</span></div>
       <p class="church-confirm-note">Pilihan ini tidak dapat dirubah. Pastikan sudah benar!.</p>
       <div class="church-confirm-actions">
-        <button class="church-confirm-cancel" (click)="cancelConfirmChurch()">
-          Pilih Ulang
-        </button>
-        <button class="church-confirm-ok"
-                [class.loading]="churchSaving"
-                [disabled]="churchSaving"
-                (click)="confirmChurch()">
-          <span *ngIf="!churchSaving">Ya, Lanjutkan ✓</span>
-          <span *ngIf="churchSaving">Menyimpan...</span>
-        </button>
+        <button class="church-confirm-cancel" (click)="cancelConfirmChurch()">Pilih Ulang</button>
+        <button class="church-confirm-ok" [class.loading]="churchSaving" [disabled]="churchSaving" (click)="confirmChurch()"><span *ngIf="!churchSaving">Ya, Lanjutkan ✓</span><span *ngIf="churchSaving">Menyimpan...</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSTER ZOOM POPUP -->
+  <div class="poster-zoom-overlay" [class.active]="showPosterZoom" (click)="closePosterZoom()">
+    <div class="poster-zoom-inner" (click)="$event.stopPropagation()" (touchstart)="onPzTouchStart($event)" (touchmove)="onPzTouchMove($event)">
+      <button class="pz-close-btn" (click)="closePosterZoom()">✕</button>
+      <div class="pz-img-wrap"><img [src]="posterZoomUrl" class="pz-img" [style.transform]="'scale(' + posterZoomScale + ')'" /></div>
+      <div class="pz-controls" (click)="$event.stopPropagation()">
+        <button class="pz-btn" (click)="pzZoomOut()"><span>−</span></button>
+        <button class="pz-btn pz-reset" (click)="pzReset()">{{ (posterZoomScale * 100).toFixed(0) }}%</button>
+        <button class="pz-btn" (click)="pzZoomIn()"><span>＋</span></button>
       </div>
     </div>
   </div>

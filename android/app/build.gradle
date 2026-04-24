@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "io.ionic.starter"
+    namespace = "com.gktapp.mobile"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.gktapp.mobile"

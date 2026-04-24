@@ -1,4 +1,4 @@
-package io.ionic.starter;
+package com.gktapp.mobile;
 
 import com.getcapacitor.BridgeActivity;
 

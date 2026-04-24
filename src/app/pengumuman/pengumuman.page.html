@@ -1,0 +1,85 @@
+<!-- pages/pengumuman/pengumuman.page.html -->
+<ion-header class="ion-no-border pengumuman-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Pengumuman</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="pengumuman-content">
+
+  <div class="loading-container" *ngIf="loading">
+    <div class="skeleton-card" *ngFor="let i of [1,2,3]"></div>
+  </div>
+
+  <div class="content-container" *ngIf="!loading">
+    <div class="month-group" *ngFor="let group of groups; trackBy: trackByMonth">
+      <h3 class="month-title"><span class="month-dot"></span>{{ group.month }}</h3>
+      
+      <div class="doc-list">
+        <div class="doc-card" *ngFor="let doc of group.docs; trackBy: trackByNounId" (click)="openDetail(doc)">
+          
+          <div class="doc-slider" *ngIf="doc.posters.length > 0">
+            <div class="doc-track" [style.transform]="'translateX(' + (-(doc.currentPosterIndex * 100)) + '%)'">
+              <img class="doc-poster" *ngFor="let url of doc.posters; trackBy: trackByIndex" [src]="url" [alt]="doc.noun_title" (click)="openPosterZoom(url, $event)" />
+            </div>
+            <div class="doc-dots" *ngIf="doc.posters.length > 1" (click)="$event.stopPropagation()">
+              <span class="doc-dot" *ngFor="let p of doc.posters; let i = index" [class.active]="i === doc.currentPosterIndex" (click)="goToDocPoster(doc, i)"></span>
+            </div>
+            <div class="zoom-hint">🔍 Tap foto untuk perbesar</div>
+          </div>
+          
+          <div class="doc-no-poster" *ngIf="doc.posters.length === 0"><span>📋</span></div>
+          
+          <div class="doc-body">
+            <p class="doc-title">{{ doc.noun_title }}</p>
+            <p class="doc-desc">{{ doc.noun_desc }}</p>
+            <span class="doc-more">Selengkapnya →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="groups.length === 0">
+      <span>📭</span>
+      <p>Belum ada pengumuman</p>
+    </div>
+  </div>
+
+  <!-- Detail Popup -->
+  <div class="popup-overlay" [class.active]="showDetail" (click)="closeDetail()">
+    <div class="popup-card" (click)="$event.stopPropagation()" *ngIf="selectedDoc">
+      <div class="popup-header"><div class="popup-badge">📢 Pengumuman</div><button class="popup-close" (click)="closeDetail()">✕</button></div>
+      
+      <div class="detail-slider" *ngIf="selectedDoc.posters.length > 0">
+        <div class="detail-track" [style.transform]="'translateX(' + (-(detailPosterIndex * 100)) + '%)'">
+          <img class="detail-poster" [class.visible]="detailPosterVisible" *ngFor="let url of selectedDoc.posters" [src]="url" [alt]="selectedDoc.noun_title" (click)="openPosterZoom(url, $event)" />
+        </div>
+        <div class="detail-dots" *ngIf="selectedDoc.posters.length > 1">
+          <span class="poster-dot" *ngFor="let p of selectedDoc.posters; let i = index" [class.active]="i === detailPosterIndex" (click)="goToDetailPoster(i)"></span>
+        </div>
+        <div class="zoom-hint">🔍 Tap foto untuk perbesar</div>
+      </div>
+      
+      <h2 class="popup-title">{{ selectedDoc.noun_title }}</h2>
+      <p class="popup-body" [innerHTML]="selectedDoc.noun_desc"></p>
+      <button class="popup-cta" (click)="closeDetail()">Tutup</button>
+    </div>
+  </div>
+
+  <!-- Poster Zoom -->
+  <div class="poster-zoom-overlay" [class.active]="showPosterZoom" (click)="closePosterZoom()">
+    <div class="poster-zoom-inner" (click)="$event.stopPropagation()" (touchstart)="onPzTouchStart($event)" (touchmove)="onPzTouchMove($event)">
+      <button class="pz-close" (click)="closePosterZoom()">✕</button>
+      <div class="pz-img-wrap"><img [src]="posterZoomUrl" class="pz-img" [style.transform]="'scale(' + posterZoomScale + ')'" /></div>
+      <div class="pz-controls">
+        <button class="pz-btn" (click)="pzZoomOut()"><span>−</span></button>
+        <button class="pz-btn pz-reset" (click)="pzReset()">{{ (posterZoomScale * 100).toFixed(0) }}%</button>
+        <button class="pz-btn" (click)="pzZoomIn()"><span>＋</span></button>
+      </div>
+    </div>
+  </div>
+
+</ion-content>
