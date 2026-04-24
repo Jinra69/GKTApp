@@ -16,6 +16,7 @@ import { PosterSliderComponent } from '../components/poster-slider/poster-slider
 import { Announcement, Poster, MobileNotif } from '../shared/interfaces/pengumuman.interface';
 import { MenuItem, MenuGroup, User, Church } from '../shared/interfaces/user.interface';
 import { Verse } from '../shared/interfaces/verse.interface';
+import { OneSignalService } from '../shared/services/onesignal.service';
 
 @Component({
   selector: 'app-home',
@@ -137,6 +138,7 @@ export class HomePage implements OnInit, OnDestroy {
     private api: ApiService,
     private verseService: VerseService,
     private storage: StorageService,
+    private oneSignalService: OneSignalService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
   ) {
@@ -144,10 +146,17 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
+    // Validate token first
+    const isValid = await this.validateToken();
+    if (!isValid) {
+      this.router.navigate(['/login'], { replaceUrl: true });
+      return;
+    }
     const user = this.storage.getUser();
     if (user) {
       this.userName = user.user_name;
       this.userCcId = user.cc_id;
+      await this.updatePlayerId(user.mob_id);
     }
 
     this.disableAndroidBackButton();
@@ -166,6 +175,36 @@ export class HomePage implements OnInit, OnDestroy {
     this.verseRef = verse.ref;
     this.verseLoading = false;
     this.cdr.markForCheck();
+  }
+
+  // 🔥 METHOD UPDATE PLAYER ID 🔥
+  private async updatePlayerId(mobId: number) {
+    try {
+      const playerId = await this.oneSignalService.getPlayerId();
+      if (playerId) {
+        console.log('Player ID : '+playerId)
+        const result = await this.api.updatePlayerId(mobId, playerId);
+        if (result.success) {
+          console.log('Player ID updated in home page');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update player ID in home page:', error);
+    }
+  }
+
+  private async validateToken(): Promise<boolean> {
+    try {
+      const res = await this.api.validateToken();
+      if (res.success) {
+        return true;
+      }
+    } catch (err) {
+      console.error('Token validation failed:', err);
+    }
+    
+    this.storage.clearAll();
+    return false;
   }
 
   ngOnDestroy() {
@@ -366,8 +405,13 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   logout() {
+    // Clear all localStorage data
+    this.storage.clearAll();
+    
+    // Close popup
     this.closeProfilePopup();
-    this.storage.clearUser();
+    
+    // Navigate to login tanpa replaceUrl agar bisa back button?
     this.router.navigate(['/login'], { replaceUrl: true });
   }
 

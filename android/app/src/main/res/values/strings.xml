@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">GKTApp</string>
-    <string name="title_activity_main">GKTApp</string>
-    <string name="package_name">com.gktapp.mobile</string>
-    <string name="custom_url_scheme">com.gktapp.mobile</string>
+    <string name="app_name">GKT</string>
+    <string name="title_activity_main">GKT</string>
+    <string name="package_name">com.graylite.gktnlcc</string>
+    <string name="custom_url_scheme">com.graylite.gktnlcc</string>
 </resources>

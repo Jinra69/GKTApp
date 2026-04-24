@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.gktapp.mobile',
-  appName: 'GKTApp',
+  appId: 'com.graylite.gktnlcc',
+  appName: 'GKT',
   webDir: 'www',  // ← DIUBAH: karena builder application menghasilkan output di www/browser
   android: {
     allowMixedContent: true,

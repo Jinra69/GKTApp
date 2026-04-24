@@ -1,4 +1,4 @@
-package com.gktapp.mobile;
+package com.graylite.gktnlcc;
 
 import com.getcapacitor.BridgeActivity;
 
