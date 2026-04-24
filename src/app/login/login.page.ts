@@ -42,32 +42,33 @@ export class LoginPage implements OnInit, OnDestroy {
   isLogin: boolean = true;
   showOtpStep: boolean = false;
   showChurchPopup: boolean = false;
-  
+
   // Form fields
   name: string = '';
   email: string = '';
   phone: string = '';
   password: string = '';
-  
+
   // Church selection
   selectedCcId: number | null = null;
   selectedCcName: string = '';
   churches: Church[] = [];
   churchLoading: boolean = false;
   churchSearch: string = '';
-  
+
   // Remember me
   rememberMe: boolean = false;
-  
+
   // OTP
   otpCode: string = '';
   otpCountdown: number = 0;
   otpResendable: boolean = false;
   private countdownTimer: any = null;
   public pendingRegister: PendingRegister | null = null;
-  
+
   // Google OAuth
   private readonly WEB_CLIENT_ID = '652723815945-q5m6hss5p6a6s6udi8puoqu0daqklk5c.apps.googleusercontent.com';
+  private googleAuthInitialized: boolean = false;
 
   constructor(
     private toastCtrl: ToastController,
@@ -92,8 +93,7 @@ export class LoginPage implements OnInit, OnDestroy {
   }
 
   // ========== SESSION MANAGEMENT ==========
-   private async checkExistingSession() {
-    // Check if user already logged in with valid token
+  private async checkExistingSession() {
     if (this.storage.isSessionValid()) {
       const token = this.storage.getToken();
       if (token) {
@@ -102,7 +102,6 @@ export class LoginPage implements OnInit, OnDestroy {
           if (res.success) {
             const user = this.storage.getUser();
             if (user && user.cc_id && user.cc_id !== 0) {
-              // Langsung redirect ke home, tidak perlu login lagi
               await this.router.navigate(['/home'], { replaceUrl: true });
               return;
             }
@@ -114,7 +113,7 @@ export class LoginPage implements OnInit, OnDestroy {
         }
       }
     }
-    
+
     // Hanya isi form dengan remember me, TAPI JANGAN auto login
     const savedCredentials = this.storage.getRememberMe();
     if (savedCredentials) {
@@ -123,18 +122,21 @@ export class LoginPage implements OnInit, OnDestroy {
       this.rememberMe = true;
       this.isLogin = true;
       this.cdr.detectChanges();
-      // HAPUS auto login di sini - biarkan user klik tombol login sendiri
     }
   }
 
   // ========== GOOGLE AUTH ==========
   private initGoogleAuth() {
+    // FIX: Pastikan initialize hanya dipanggil sekali
+    if (this.googleAuthInitialized) return;
+
     try {
       GoogleAuth.initialize({
         clientId: this.WEB_CLIENT_ID,
         scopes: ['profile', 'email'],
         grantOfflineAccess: true,
       });
+      this.googleAuthInitialized = true;
     } catch (err) {
       console.warn('GoogleAuth.initialize warning:', err);
     }
@@ -226,7 +228,7 @@ export class LoginPage implements OnInit, OnDestroy {
     this.otpCountdown = seconds;
     this.otpResendable = false;
     if (this.countdownTimer) clearInterval(this.countdownTimer);
-    
+
     this.countdownTimer = setInterval(() => {
       this.ngZone.run(() => {
         this.otpCountdown--;
@@ -257,7 +259,7 @@ export class LoginPage implements OnInit, OnDestroy {
 
   async resendOtp() {
     if (!this.otpResendable || !this.pendingRegister) return;
-    
+
     const loading = await this.showLoading('Mengirim ulang kode...');
     try {
       const res = await this.api.sendOtp(this.pendingRegister.email, this.pendingRegister.name);
@@ -310,7 +312,7 @@ export class LoginPage implements OnInit, OnDestroy {
       if (res.success) {
         if (this.countdownTimer) clearInterval(this.countdownTimer);
         await this.showToast('Akun berhasil dibuat! Silakan masuk. 🎉', 'success');
-        
+
         this.ngZone.run(() => {
           this.name = '';
           this.phone = '';
@@ -337,7 +339,7 @@ export class LoginPage implements OnInit, OnDestroy {
   async login() {
     const email = this.email.trim();
     const password = this.password.trim();
-    
+
     if (!email || !password) {
       await this.showToast('Email dan password wajib diisi.');
       return;
@@ -350,24 +352,21 @@ export class LoginPage implements OnInit, OnDestroy {
     const loading = await this.showLoading('Masuk...');
     try {
       const res = await this.api.login(email, password);
-      
+
       if (res.success) {
-        // Save token and user data
         if (res.token) {
           this.storage.setToken(res.token);
         }
         this.storage.setUser(res.data);
-        
-        // Save OneSignal player_id setelah login berhasil
+
         await this.savePlayerId(res.data.mob_id);
-        
-        // Handle remember me
+
         if (this.rememberMe) {
           this.storage.saveRememberMe(email, password);
         } else {
           this.storage.clearRememberMe();
         }
-        
+
         await loading.dismiss();
         await this.showToast(`Selamat datang, ${res.data.user_name ?? 'Pengguna'}! 🎉`, 'success');
         this.router.navigate(['/home'], { replaceUrl: true });
@@ -381,7 +380,6 @@ export class LoginPage implements OnInit, OnDestroy {
       await loading.dismiss();
     }
   }
-
 
   // ========== REGISTER ==========
   async register() {
@@ -411,7 +409,7 @@ export class LoginPage implements OnInit, OnDestroy {
     // Check if email exists
     const checkLoading = await this.showLoading('Memeriksa data...');
     let emailExists = false;
-    
+
     try {
       const checkRes = await this.api.checkEmail(email);
       emailExists = !!(checkRes.success && checkRes.data?.exists);
@@ -427,10 +425,12 @@ export class LoginPage implements OnInit, OnDestroy {
         header: 'Email Sudah Terdaftar',
         message: `Email ${email} sudah digunakan. Silakan gunakan email lain atau masuk dengan akun yang sudah ada.`,
         buttons: [
-          { text: 'Masuk Sekarang', handler: () => { 
-            this.isLogin = true; 
-            this.cdr.detectChanges();
-          }},
+          {
+            text: 'Masuk Sekarang', handler: () => {
+              this.isLogin = true;
+              this.cdr.detectChanges();
+            }
+          },
           { text: 'Ganti Email', role: 'cancel' }
         ]
       });
@@ -441,8 +441,8 @@ export class LoginPage implements OnInit, OnDestroy {
     // Send OTP
     const otpLoading = await this.showLoading('Mengirim kode verifikasi...');
     try {
-      const otpRes = await this.api.sendOtp(email, name); 
-      
+      const otpRes = await this.api.sendOtp(email, name);
+
       if (!otpRes.success) {
         await this.showToast(otpRes.message || 'Gagal mengirim kode verifikasi.');
         return;
@@ -455,7 +455,7 @@ export class LoginPage implements OnInit, OnDestroy {
         this.startCountdown();
         this.cdr.detectChanges();
       });
-      
+
       await this.showToast(`Kode verifikasi dikirim ke ${email}`, 'success');
     } catch {
       await this.showToast('Tidak dapat terhubung ke server. Coba lagi.');
@@ -477,20 +477,23 @@ export class LoginPage implements OnInit, OnDestroy {
     };
 
     try {
-      this.initGoogleAuth();
+      // FIX: Hapus this.initGoogleAuth() di sini — sudah dipanggil di ngOnInit
+      // Memanggil initialize() lebih dari sekali bisa menyebabkan konflik state
 
+      // Sign out dulu untuk paksa akun picker muncul
       try {
         await GoogleAuth.signOut();
       } catch {
-        // Ignore
+        // Abaikan error sign out — tidak apa-apa jika belum login sebelumnya
       }
 
       const googleUser = await GoogleAuth.signIn();
-      
+
       const email: string = (googleUser as any).email || (googleUser as any).profile?.email || '';
       const name: string = (googleUser as any).name || (googleUser as any).givenName || (googleUser as any).profile?.name || email;
 
       if (!email) {
+        await safeDismiss();
         await this.showToast('Gagal mendapatkan email dari akun Google.');
         return;
       }
@@ -502,12 +505,11 @@ export class LoginPage implements OnInit, OnDestroy {
           this.storage.setToken(res.token);
         }
         this.storage.setUser(res.data);
-        
+
         await safeDismiss();
-        
-        // 🔥 SAVE PLAYER ID AFTER GOOGLE LOGIN 🔥
+
         await this.oneSignalService.updateCurrentUserPlayerId();
-        
+
         await this.showToast(`Selamat datang, ${res.data?.user_name ?? 'Pengguna'}! 🎉`, 'success');
         this.router.navigate(['/home'], { replaceUrl: true });
         return;
@@ -515,11 +517,19 @@ export class LoginPage implements OnInit, OnDestroy {
         await this.showToast(res.message || 'Login Google gagal. Coba lagi.');
       }
     } catch (err: any) {
+      // FIX: Log error detail agar mudah di-debug
       console.error('Google login error:', err);
-      
-      const errMsg = (err?.message || '').toString();
-      const isCancelled = errMsg === 'User cancelled' || errMsg.includes('canceled');
-      
+      console.error('Google login error message:', err?.message);
+      console.error('Google login error code:', err?.code);
+
+      const errMsg = (err?.message ?? err?.code ?? '').toString();
+      const isCancelled =
+        errMsg === 'User cancelled' ||
+        errMsg.includes('canceled') ||
+        errMsg.includes('cancelled') ||
+        errMsg.includes('12501') || // Google Sign-In cancel code Android
+        errMsg.includes('popup_closed'); // Web cancel
+
       if (!isCancelled) {
         await this.showToast('Login Google gagal. Coba lagi.');
       }
