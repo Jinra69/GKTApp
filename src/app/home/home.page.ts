@@ -88,7 +88,7 @@ export class HomePage implements OnInit, OnDestroy {
     { icon: '📣', name: 'Pengumuman', desc: 'Info & berita', bg: '#FFF0EB', detail: '', action: 'pengumuman' },
     { icon: '📖', name: 'Firman', desc: 'Renungan harian', bg: '#FFF7EB', detail: 'Baca renungan harian, khotbah mingguan, dan materi PA yang disiapkan hamba Tuhan GKT.', action: '' },
     { icon: '🎵', name: 'Pujian', desc: 'Lagu & lirik', bg: '#EBFFF4', detail: 'Koleksi lagu pujian lengkap dengan lirik, not balok, dan panduan tim musik.', action: '' },
-    { icon: '💰', name: 'Persembahan', desc: 'Online offering', bg: '#FFEBF4', detail: 'Berikan persembahan dan perpuluhan secara online dengan mudah dan aman.', action: '' },
+    { icon: '💰', name: 'Absensi', desc: 'Absensi Jemaat', bg: '#FFEBF4', detail: 'Absensi ibadah umum, pemuda, remaja, sekolah minggu', action: 'absensi' },
     { icon: '📅', name: 'Kalender', desc: 'Agenda gereja', bg: '#F4EBFF', detail: 'Lihat agenda dan kalender kegiatan gereja sepanjang tahun.', action: '' },
   ];
 
@@ -107,7 +107,7 @@ export class HomePage implements OnInit, OnDestroy {
     ]},
     { label: 'Jemaat & Pelayanan', items: [
       { icon: '👥', name: 'Komsel', bg: '#F4EBFF', detail: 'Kelompok sel di wilayah Anda.', desc : ''  },
-      { icon: '💰', name: 'Persembahan', bg: '#FFEBEB', detail: 'Persembahan dan perpuluhan online.', desc : ''  },
+      { icon: '💰', name: 'Absensi', bg: '#FFEBEB', detail: 'Persembahan dan perpuluhan online.', desc : ''  },
       { icon: '📞', name: 'Kontak', bg: '#FFFBEB', detail: 'Hubungi majelis dan pendeta.', desc : ''  },
       { icon: '📰', name: 'Warta', bg: '#EBFFFC', detail: 'Warta jemaat mingguan.', desc : ''  },
       { icon: '🤝', name: 'Diakonia', bg: '#EBF4FF', detail: 'Program sosial dan pelayanan kasih.', desc : ''  },
@@ -333,8 +333,13 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   openMenu(item: MenuItem) {
+    console.log(item.action)
     if (item.action === 'pengumuman') {
       this.router.navigate(['/pengumuman']);
+      return;
+    }
+    if (item.action === 'absensi') {
+      this.router.navigate(['/absensi']);
       return;
     }
     this.selectedMenu = item;
