@@ -1,9 +1,171 @@
-<!-- pages/pengumuman/pengumuman.page.html -->
-<ion-header class="ion-no-border pengumuman-header">
+<!-- pages/absensi/absensi.page.html -->
+<ion-header class="ion-no-border absensi-header">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/home"></ion-back-button>
     </ion-buttons>
-    <ion-title>Absensi</ion-title>
+    <ion-title>
+      <span class="header-title-wrap">
+        <span class="cross-icon"></span>
+        Absensi
+      </span>
+    </ion-title>
+    <ion-buttons slot="end">
+      <button class="history-btn" (click)="toggleHistory()">
+        <span class="h-lines">
+          <span></span><span></span><span></span>
+        </span>
+        History
+      </button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
+
+<!-- Tab Bar -->
+<div class="tab-bar">
+  <div class="tab" [class.active]="activeTab === 'kamera'" (click)="switchTab('kamera')">Scan QR</div>
+  <div class="tab" [class.active]="activeTab === 'qrcode'" (click)="switchTab('qrcode')">QR Saya</div>
+</div>
+
+<ion-content class="absensi-content">
+
+  <!-- ==================== TAB KAMERA (Scanner) ==================== -->
+  <div class="cam-view" *ngIf="activeTab === 'kamera'">
+    <div class="cam-bg-grid"></div>
+
+    <!-- Loading saat scanner disiapkan -->
+    <div class="scanner-loading-wrap" *ngIf="scannerLoading">
+      <div class="scanner-spinner"></div>
+      <span class="scanner-loading-text">Membuka kamera...</span>
+    </div>
+
+    <!-- UI saat scanner aktif / siap -->
+    <ng-container *ngIf="!scannerLoading">
+      <div class="cam-viewfinder qr-viewfinder">
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+        <!-- Garis scan animasi -->
+        <div class="scan-line"></div>
+      </div>
+
+      <div class="cam-hint">
+        <strong>Arahkan kamera ke QR Code</strong>
+        Scan otomatis saat QR terdeteksi
+      </div>
+
+      <div class="shutter-area">
+        <button class="shutter-btn scan-start-btn" (click)="startBarcodeScan()" [disabled]="scannerActive">
+          <ion-icon name="qr-code-outline"></ion-icon>
+        </button>
+        <span class="shutter-label" *ngIf="!scannerActive">Tap untuk scan ulang</span>
+        <span class="shutter-label active-label" *ngIf="scannerActive">Scanning...</span>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- ==================== TAB QR CODE (QR milik user) ==================== -->
+  <div class="qr-view" *ngIf="activeTab === 'qrcode'">
+    <div class="cam-bg-grid"></div>
+
+    <div class="qr-card">
+      <span class="qr-label">QR Absensi Anda</span>
+
+      <!-- Loading -->
+      <div class="qr-img-wrap" *ngIf="qrLoading">
+        <div class="qr-skeleton">
+          <div class="qr-skeleton-pulse"></div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="qr-img-wrap qr-error-wrap" *ngIf="!qrLoading && qrError">
+        <div class="qr-error-content">
+          <span class="qr-error-icon">⚠</span>
+          <span class="qr-error-text">Gagal memuat QR</span>
+          <button class="qr-retry-btn" (click)="retryQr()">Coba lagi</button>
+        </div>
+      </div>
+
+      <!-- QR Image dari API -->
+      <div class="qr-img-wrap" *ngIf="!qrLoading && !qrError && qrImageUrl">
+        <img [src]="qrImageUrl" alt="QR Absensi" class="qr-img" />
+      </div>
+
+      <span class="qr-id" *ngIf="personId">GBT-2025-{{ personId }}</span>
+
+      <span class="qr-expire">
+        <ion-icon name="time-outline"></ion-icon>
+        Berlaku hingga 23:59 hari ini
+      </span>
+    </div>
+
+    <p class="qr-hint">
+      <strong>Tunjukkan ke petugas gereja</strong>
+      QR akan diperbarui otomatis setiap hari
+    </p>
+
+    <!-- Dev only: simulasi QR di-scan → hapus di produksi -->
+    <button class="demo-scan-btn" (click)="showScanResult()" *ngIf="personId">
+      [Dev] Simulasi QR di-scan
+    </button>
+  </div>
+
+</ion-content>
+
+<!-- ==================== OVERLAY ==================== -->
+<div class="panel-overlay"
+     [class.open]="historyOpen || popupOpen"
+     (click)="historyOpen ? toggleHistory() : closePopup()">
+</div>
+
+<!-- ==================== HISTORY PANEL ==================== -->
+<div class="history-panel" [class.open]="historyOpen">
+  <div class="panel-head">
+    <span class="panel-title">History Absen</span>
+    <button class="panel-close" (click)="toggleHistory()">×</button>
+  </div>
+  <div class="panel-body">
+
+    <!-- Loading -->
+    <div class="history-loading" *ngIf="historyLoading">
+      <span>Memuat...</span>
+    </div>
+
+    <!-- Empty -->
+    <div class="history-empty" *ngIf="!historyLoading && historyAbsen.length === 0">
+      <span>Belum ada data absensi</span>
+    </div>
+
+    <div class="history-item" *ngFor="let item of historyAbsen">
+      <div class="hi-date">{{ item.tanggal }}</div>
+      <div class="hi-row">
+        <span class="hi-name">
+          <span class="dot" [ngClass]="'dot-' + item.statusKey"></span>
+          Masuk
+        </span>
+        <span class="hi-badge" [ngClass]="'badge-' + item.statusKey">{{ item.status }}</span>
+      </div>
+      <div class="hi-time">{{ item.waktu }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCAN RESULT POPUP ==================== -->
+<div class="scan-popup" [class.open]="popupOpen" role="dialog" aria-modal="true">
+  <button class="popup-close" (click)="closePopup()" aria-label="Tutup">
+    <ion-icon name="close-outline"></ion-icon>
+  </button>
+
+  <div class="popup-icon">
+    <ion-icon name="checkmark-circle-outline"></ion-icon>
+  </div>
+
+  <span class="popup-title">QR Berhasil Dipindai</span>
+  <span class="popup-label">ID Jemaat</span>
+  <span class="popup-person-id">{{ popupId }}</span>
+  <span class="popup-sub">Absensi tercatat hari ini</span>
+
+  <button class="popup-ok-btn" (click)="closePopup()">OK</button>
+</div>

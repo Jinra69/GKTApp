@@ -1,0 +1,640 @@
+// pages/renungan/renungan.page.scss
+$navy:      #1A2E4A;
+$navy-dark: #111f35;
+$navy-mid:  #243a57;
+$gold:      #C9A84C;
+$gold-lt:   #e8c97a;
+$white:     #ffffff;
+
+// ── Toolbar ───────────────────────────────────────
+ion-toolbar {
+  --background: #{$navy};
+  --color: #{$white};
+  --border-color: transparent;
+
+  ion-title {
+    color: $white;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+  }
+
+  ion-button { --color: #{$white}; }
+  ion-icon.active-filter { color: $gold; }
+}
+
+// ── Refresh spin animation ────────────────────────
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+ion-icon.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+// ── Date range filter bar ─────────────────────────
+.date-filter-bar {
+  background: $navy-dark;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba($gold, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-range-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.date-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.date-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba($gold, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.date-sep {
+  color: rgba($white, 0.3);
+  font-size: 16px;
+  padding-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.date-input {
+  width: 100%;
+  background: rgba($white, 0.07);
+  border: 1px solid rgba($gold, 0.35);
+  border-radius: 8px;
+  color: $white;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  padding: 6px 10px;
+  outline: none;
+  box-sizing: border-box;
+
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.55;
+  }
+}
+
+.clear-btn {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba($gold, 0.12);
+  border: 1px solid $gold;
+  border-radius: 8px;
+  color: $gold;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+
+  ion-icon { font-size: 14px; }
+}
+
+// ── Page background ───────────────────────────────
+ion-content {
+  --background: #f0f3f7;
+}
+
+// ── Card list ─────────────────────────────────────
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+// ── Renungan card ─────────────────────────────────
+.renungan-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 80px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  background-color: $white;
+  border: 1.5px solid rgba($gold, 0.35);
+  box-shadow: 0 2px 8px rgba($navy, 0.07);
+
+  &.card-has-image {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    border: none;
+    min-height: 100px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  }
+
+  &:active {
+    transform: scale(0.983);
+  }
+}
+
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.60) 100%
+  );
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 14px 12px;
+  min-width: 0;
+}
+
+.card-date {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: $gold;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+
+  ion-icon { font-size: 12px; }
+
+  &.card-on-image {
+    color: $gold-lt;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+}
+
+.card-title {
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: $navy;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  &.card-on-image {
+    color: $white;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.55);
+  }
+}
+
+.card-chevron {
+  position: relative;
+  z-index: 1;
+  padding: 0 14px;
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 18px;
+    color: rgba($navy, 0.28);
+  }
+
+  &.card-on-image ion-icon {
+    color: rgba($white, 0.6);
+  }
+}
+
+// ── Skeleton ──────────────────────────────────────
+.skeleton-card {
+  background-color: $white !important;
+  background-image: none !important;
+  border: 1.5px solid rgba($gold, 0.2) !important;
+  box-shadow: none !important;
+  cursor: default;
+  padding: 18px 14px;
+  animation: pulse 1.5s ease-in-out infinite;
+
+  &:active { transform: none !important; }
+}
+
+.sk-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.sk-line {
+  height: 11px;
+  border-radius: 6px;
+  background: rgba($navy, 0.08);
+
+  &.short { width: 42%; }
+  &.long  { width: 76%; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+// ── Empty state ───────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 24px;
+  gap: 10px;
+
+  .empty-cross {
+    font-size: 38px;
+    color: rgba($navy, 0.1);
+    line-height: 1;
+  }
+
+  .empty-icon {
+    font-size: 46px;
+    color: rgba($navy, 0.15);
+  }
+
+  .empty-text {
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    color: #9aa5b1;
+    text-align: center;
+    margin: 0;
+  }
+}
+
+// ── Detail full-screen ────────────────────────────
+.detail-page {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  &.open { transform: translateX(0); }
+}
+
+// ── Detail header ─────────────────────────────────
+.detail-header {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
+
+  &.detail-has-image {
+    background-size: cover !important;
+    background-position: center top !important;
+    background-repeat: no-repeat !important;
+  }
+}
+
+// Top bar — back button
+.detail-topbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding: 12px 14px 8px;
+  min-height: 56px;
+}
+
+.detail-header-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.30) 0%,
+      rgba(0, 0, 0, 0.15) 30%,
+      rgba(0, 0, 0, 0.75) 100%
+    );
+  pointer-events: none;
+}
+
+.detail-cross-deco {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  right: 18px;
+  font-size: 64px;
+  color: rgba($white, 0.10);
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.detail-back {
+  position: relative;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.32);
+  border: 1px solid rgba($white, 0.28);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  ion-icon {
+    font-size: 20px;
+    color: $white;
+  }
+
+  &:active { opacity: 0.75; }
+}
+
+.detail-header-text {
+  position: relative;
+  z-index: 1;
+  padding: 0 20px 24px;
+}
+
+.detail-date {
+  display: block;
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: $gold-lt;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin-bottom: 8px;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+}
+
+.detail-title {
+  font-family: 'Nunito', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: $white;
+  margin: 0;
+  line-height: 1.3;
+  text-shadow:
+    0 1px 3px rgba(0,0,0,0.6),
+    0 3px 10px rgba(0,0,0,0.5),
+    0 6px 20px rgba(0,0,0,0.3);
+}
+
+// ════════════════════════════════════════════════════
+// ── Header Player ────────────────────────────────
+// ════════════════════════════════════════════════════
+
+.header-player {
+  position: relative;
+  z-index: 2;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+// ── Play/Pause pill button ────────────────────────
+.hp-play-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: $gold;
+  border: none;
+  border-radius: 50px;
+  padding: 9px 18px 9px 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba($gold, 0.55);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba($gold, 0.35);
+  }
+}
+
+.hp-play-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: $navy-dark;
+  border-radius: 50%;
+
+  ion-icon {
+    font-size: 15px;
+    color: $gold-lt;
+  }
+}
+
+.hp-play-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: $navy-dark;
+  white-space: nowrap;
+}
+
+// ── Stop button ───────────────────────────────────
+.hp-stop-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: rgba($white, 0.14);
+  border: 1.5px solid rgba($white, 0.30);
+  border-radius: 50%;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.15s ease, transform 0.15s ease;
+
+  ion-icon {
+    font-size: 17px;
+    color: $white;
+  }
+
+  &:active { transform: scale(0.9); }
+}
+
+// ── Mini waveform ────────────────────────────────
+.hp-wave {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 20px;
+  margin-left: 2px;
+
+  span {
+    display: block;
+    width: 3px;
+    border-radius: 2px;
+    background: rgba($gold-lt, 0.7);
+    height: 5px;
+    transform-origin: bottom;
+    transition: height 0.2s ease;
+  }
+
+  &.hp-wave-active {
+    span:nth-child(1) { animation: hp-wave 0.8s ease-in-out -0.4s infinite; }
+    span:nth-child(2) { animation: hp-wave 0.8s ease-in-out -0.2s infinite; }
+    span:nth-child(3) { animation: hp-wave 0.8s ease-in-out  0.0s infinite; }
+    span:nth-child(4) { animation: hp-wave 0.8s ease-in-out -0.3s infinite; }
+    span:nth-child(5) { animation: hp-wave 0.8s ease-in-out -0.1s infinite; }
+  }
+}
+
+@keyframes hp-wave {
+  0%, 100% { height: 4px; }
+  50%       { height: 18px; }
+}
+
+// ── Badge suara perempuan ─────────────────────────
+// Tampil kecil di sebelah waveform saat tidak sedang play
+.hp-voice-badge {
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba($gold-lt, 0.75);
+  background: rgba($white, 0.10);
+  border: 1px solid rgba($gold-lt, 0.30);
+  border-radius: 20px;
+  padding: 3px 8px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+// ── Progress bar + time ───────────────────────────
+.hp-progress-wrap {
+  position: relative;
+  z-index: 2;
+  margin-top: 12px;
+  cursor: pointer;
+
+  &:hover .hp-progress-track { height: 5px; }
+}
+
+.hp-progress-track {
+  height: 3px;
+  background: rgba($white, 0.22);
+  border-radius: 2px;
+  position: relative;
+  transition: height 0.15s ease;
+}
+
+.hp-progress-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: $gold;
+  border-radius: 2px;
+  transition: width 0.25s linear;
+  box-shadow: 0 0 6px rgba($gold, 0.6);
+}
+
+.hp-time-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba($white, 0.5);
+  letter-spacing: 0.3px;
+}
+
+// ── Detail body ───────────────────────────────────
+.detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 20px;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 32px);
+}
+
+// ── Detail desc + word highlight ─────────────────
+.detail-desc {
+  font-family: 'Nunito', sans-serif;
+  font-size: 14.5px;
+  color: #2d3f52;
+  line-height: 1.85;
+  text-align: justify;
+
+  p      { margin: 0 0 16px; display: block; }
+  br     { display: block; content: ''; margin-bottom: 4px; }
+  strong { color: $navy; font-weight: 800; }
+  em     { color: #4a5f75; }
+  h2, h3 { color: $navy; font-weight: 800; margin: 20px 0 8px; }
+
+  blockquote {
+    border-left: 3px solid $gold;
+    margin: 14px 0;
+    padding: 8px 14px;
+    background: rgba($gold, 0.07);
+    border-radius: 0 8px 8px 0;
+    color: $navy-mid;
+    font-style: italic;
+  }
+
+  // ── Setiap kata: span transparan normal ──────
+  // formattedDesc() membungkus tiap kata dengan <span class="tts-word" id="w-N">
+  .tts-word {
+    display: inline;
+    border-radius: 3px;
+    // Transisi mulus agar highlight muncul/pergi dengan lembut
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  // ── Kata aktif: blok kuning ───────────────────
+  // Class "tts-active" ditambahkan/dihapus langsung ke DOM element
+  // oleh scrollToActiveWord() di TypeScript agar tidak perlu re-render Angular.
+  .tts-word.tts-active {
+    background-color: #FFE234;      // kuning cerah, kontras tinggi
+    color: #1a1a1a;                 // teks gelap agar terbaca di atas kuning
+    border-radius: 4px;
+    padding: 1px 2px;
+    margin: -1px -2px;              // kompensasi padding agar layout tidak bergeser
+    box-shadow:
+      0 0 0 2px rgba(#FFE234, 0.5),
+      0 2px 8px rgba(#FFE234, 0.4);
+  }
+
+  // ── Kata yang sudah selesai dibaca: kuning pudar ──
+  // Opsional: beri tanda bahwa kata ini sudah dilewati
+  .tts-word.tts-done {
+    background-color: rgba(#FFE234, 0.18);
+    border-radius: 3px;
+  }
+}

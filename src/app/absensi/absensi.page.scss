@@ -1,34 +1,729 @@
-// pages/pengumuman/pengumuman.page.scss
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap');
+// pages/absensi/absensi.page.scss
 
+// ─── Variables ────────────────────────────────────────────────────────────────
 :host {
-  --gold: #C9A84C;
-  --navy: #1A2E4A;
-  --bg: #EEF3FB;
+  --navy-deep:   #0b1829;
+  --navy:        #0e2040;
+  --navy-mid:    #152a50;
+  --navy-border: #1e3a6a;
+  --blue-strong: #2d6bc4;
+  --blue-mid:    #1a3460;
+  --blue-muted:  #2d5090;
+  --blue-light:  #7db3e8;
+  --text-primary:   #e8f0fc;
+  --text-secondary: #8aaecc;
+  --text-muted:     #4a6fa5;
+  --gold:        #C9A84C;
 }
 
-ion-content.pengumuman-content { --background: #EEF3FB; }
-
-.loading-container { padding: 20px 18px; display: flex; flex-direction: column; gap: 14px; }
-.skeleton-card { height: 280px; border-radius: 16px; background: linear-gradient(90deg, #e8eef5 25%, #f0f5fb 50%, #e8eef5 75%); background-size: 200% 100%; animation: skeleton-slide 1.5s infinite; }
-@keyframes skeleton-slide { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-ion-header.pengumuman-header {
+// ─── Header ───────────────────────────────────────────────────────────────────
+ion-header.absensi-header {
   ion-toolbar {
-    --background: #1A2E4A;
-    --color: #ffffff;
-    
-    ion-title {
-      font-weight: 800;
-      font-family: 'Poppins', sans-serif;
-    }
-    
-    ion-back-button {
-      --color: #C9A84C;
-      --color-hover: #C9A84C;
-      --color-focused: #C9A84C;
+    --background: var(--navy);
+    --color: var(--text-primary);
+    --border-color: var(--navy-border);
+    ion-back-button { --color: var(--blue-light); }
+    ion-title { padding-inline: 0; }
+  }
+}
+
+.header-title-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cross-icon {
+  width: 14px; height: 14px;
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 2px; height: 100%;
+    background: var(--blue-light);
+    border-radius: 1px;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    top: 30%; left: 0;
+    width: 100%; height: 2px;
+    background: var(--blue-light);
+    border-radius: 1px;
+  }
+}
+
+// ─── History Button ───────────────────────────────────────────────────────────
+.history-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--navy-mid);
+  border: 0.5px solid var(--blue-muted);
+  border-radius: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--blue-light);
+  font-size: 12px;
+  font-weight: 500;
+  margin-right: 8px;
+  transition: background 0.15s;
+  &:active { background: var(--blue-mid); }
+}
+
+.h-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
+  span {
+    display: block;
+    width: 12px; height: 1.5px;
+    background: var(--blue-light);
+    border-radius: 1px;
+  }
+}
+
+// ─── Tab Bar ──────────────────────────────────────────────────────────────────
+.tab-bar {
+  display: flex;
+  background: var(--navy);
+  border-bottom: 0.5px solid var(--navy-border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+  &.active {
+    color: var(--blue-light);
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 20%; right: 20%;
+      height: 2px;
+      background: var(--blue-strong);
+      border-radius: 2px 2px 0 0;
     }
   }
 }
 
-.content-container { padding: 20px 18px 48px; }
+// ─── Content ──────────────────────────────────────────────────────────────────
+ion-content.absensi-content { --background: var(--navy-deep); }
+
+// ─── Background Grid ──────────────────────────────────────────────────────────
+.cam-bg-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image:
+    linear-gradient(var(--blue-light) 1px, transparent 1px),
+    linear-gradient(90deg, var(--blue-light) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+}
+
+// ─── Kamera View ─────────────────────────────────────────────────────────────
+.cam-view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--navy-deep);
+}
+
+.cam-viewfinder {
+  width: 230px; height: 230px;
+  position: relative;
+  margin-bottom: 28px;
+}
+
+.corner {
+  position: absolute;
+  width: 22px; height: 22px;
+  border-color: var(--blue-strong);
+  border-style: solid;
+  &.tl { top: 0; left: 0;     border-width: 2.5px 0 0 2.5px; border-radius: 4px 0 0 0; }
+  &.tr { top: 0; right: 0;    border-width: 2.5px 2.5px 0 0; border-radius: 0 4px 0 0; }
+  &.bl { bottom: 0; left: 0;  border-width: 0 0 2.5px 2.5px; border-radius: 0 0 0 4px; }
+  &.br { bottom: 0; right: 0; border-width: 0 2.5px 2.5px 0; border-radius: 0 0 4px 0; }
+}
+
+.face-ring {
+  width: 150px; height: 150px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(45, 107, 196, 0.5);
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.face-ring-inner {
+  width: 115px; height: 115px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(45, 107, 196, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cam-hint {
+  color: rgba(200, 216, 240, 0.45);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+  strong {
+    color: rgba(200, 216, 240, 0.8);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+}
+
+// ─── Camera Preview ───────────────────────────────────────────────────────────
+.cam-preview-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 1;
+}
+
+.cam-preview-img {
+  width: 220px; height: 220px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1.5px solid var(--navy-border);
+}
+
+.cam-retake-btn {
+  background: var(--navy-mid);
+  border: 0.5px solid var(--blue-muted);
+  color: var(--blue-light);
+  font-size: 13px;
+  padding: 6px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  &:active { background: var(--blue-mid); }
+}
+
+// ─── Shutter ──────────────────────────────────────────────────────────────────
+.shutter-area {
+  position: absolute;
+  bottom: 36px;
+  left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shutter-btn {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: var(--navy-mid);
+  border: 3px solid var(--blue-muted);
+  outline: 3px solid rgba(45, 80, 144, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s;
+  &:active   { transform: scale(0.94); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.shutter-inner {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue-strong), #1a4a8a);
+  &.loading { animation: pulse-shutter 0.9s ease-in-out infinite; }
+}
+
+@keyframes pulse-shutter {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+// ─── QR View ──────────────────────────────────────────────────────────────────
+.qr-view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--navy-deep);
+}
+
+.qr-card {
+  background: var(--navy);
+  border: 0.5px solid var(--navy-border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.qr-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 500;
+}
+
+.qr-img-wrap {
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  width: 140px; height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.qr-img {
+  width: 120px; height: 120px;
+  object-fit: contain;
+  display: block;
+}
+
+// ─── QR Skeleton ──────────────────────────────────────────────────────────────
+.qr-skeleton {
+  width: 120px; height: 120px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.qr-skeleton-pulse {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%);
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+// ─── QR Error ─────────────────────────────────────────────────────────────────
+.qr-error-wrap {
+  background: rgba(45,10,10,0.6);
+  border: 0.5px solid #7f1d1d;
+}
+
+.qr-error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+}
+
+.qr-error-icon { font-size: 24px; color: #f87171; }
+.qr-error-text { font-size: 11px; color: #f87171; text-align: center; }
+
+.qr-retry-btn {
+  background: transparent;
+  border: 0.5px solid #f87171;
+  color: #f87171;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  &:active { background: rgba(248,113,113,0.1); }
+}
+
+.qr-id {
+  font-size: 13px;
+  color: var(--blue-light);
+  font-weight: 500;
+  letter-spacing: 2px;
+}
+
+.qr-expire {
+  font-size: 11px;
+  color: var(--blue-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  ion-icon { font-size: 12px; }
+}
+
+.qr-hint {
+  color: rgba(200, 216, 240, 0.4);
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.6;
+  padding: 0 32px;
+  position: relative;
+  z-index: 1;
+  strong {
+    color: rgba(200, 216, 240, 0.7);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 3px;
+    font-size: 13px;
+  }
+}
+
+// ─── Dev button ───────────────────────────────────────────────────────────────
+.demo-scan-btn {
+  margin-top: 14px;
+  background: transparent;
+  border: 0.5px dashed var(--text-muted);
+  color: var(--text-muted);
+  font-size: 10px;
+  padding: 5px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  &:active { opacity: 0.7; }
+}
+
+// ─── Panel Overlay ────────────────────────────────────────────────────────────
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 12, 25, 0.7);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  &.open { opacity: 1; pointer-events: all; }
+}
+
+// ─── History Panel ────────────────────────────────────────────────────────────
+.history-panel {
+  position: fixed;
+  top: 0; right: -50vw;
+  width: 50vw;
+  max-width: 220px;
+  height: 100%;
+  background: var(--navy);
+  border-left: 0.5px solid var(--navy-border);
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  &.open { right: 0; }
+}
+
+.panel-head {
+  padding: 56px 14px 12px;
+  border-bottom: 0.5px solid var(--navy-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-title { color: var(--text-primary); font-size: 14px; font-weight: 600; }
+
+.panel-close {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--navy-mid);
+  border: 0.5px solid var(--blue-muted);
+  color: var(--text-muted);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  &::-webkit-scrollbar { width: 0; }
+}
+
+.history-loading,
+.history-empty {
+  padding: 24px 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.history-item {
+  padding: 10px 14px;
+  border-bottom: 0.5px solid #111f38;
+}
+
+.hi-date { font-size: 10px; color: var(--blue-muted); margin-bottom: 3px; }
+
+.hi-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hi-name {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  display: inline-block;
+  &.dot-hadir     { background: #4ade80; }
+  &.dot-terlambat { background: #fb923c; }
+  &.dot-izin      { background: #818cf8; }
+  &.dot-alpha     { background: #f87171; }
+}
+
+.hi-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 500;
+  &.badge-hadir     { background: #0a2518; color: #4ade80; border: 0.5px solid #14532d; }
+  &.badge-terlambat { background: #2d1b00; color: #fb923c; border: 0.5px solid #7c3e00; }
+  &.badge-izin      { background: #1a1a3e; color: #818cf8; border: 0.5px solid #3730a3; }
+  &.badge-alpha     { background: #2d0a0a; color: #f87171; border: 0.5px solid #7f1d1d; }
+}
+
+.hi-time { font-size: 10px; color: #2d4a70; margin-top: 2px; }
+
+// ─── Scan Result Popup ────────────────────────────────────────────────────────
+.scan-popup {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -46%) scale(0.88);
+  width: calc(100% - 56px);
+  max-width: 300px;
+  background: var(--navy);
+  border: 0.5px solid var(--navy-border);
+  border-radius: 20px;
+  padding: 28px 24px 22px;
+  z-index: 102;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &.open {
+    opacity: 1;
+    pointer-events: all;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.popup-close {
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--navy-mid);
+  border: 0.5px solid var(--navy-border);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  ion-icon { font-size: 16px; }
+}
+
+.popup-icon {
+  margin-bottom: 4px;
+  ion-icon {
+    font-size: 52px;
+    color: #4ade80;
+    filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.35));
+  }
+}
+
+.popup-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.popup-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.popup-person-id {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--blue-light);
+  letter-spacing: 3px;
+  margin: 2px 0 4px;
+}
+
+.popup-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.popup-ok-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--blue-strong);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.15s;
+  &:active { background: #1a4a8a; }
+}
+// ─── TAMBAHAN: Scanner UI ─────────────────────────────────────────────────────
+// Tempelkan di bagian bawah absensi.page.scss yang sudah ada
+
+// QR Viewfinder (lebih besar dari face viewfinder, berbentuk kotak)
+.qr-viewfinder {
+  width: 240px !important;
+  height: 240px !important;
+  margin-bottom: 28px;
+  position: relative;
+
+  // Garis scan animasi
+  .scan-line {
+    position: absolute;
+    left: 10px; right: 10px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue-light), transparent);
+    border-radius: 1px;
+    top: 10px;
+    animation: scan-move 2s linear infinite;
+    box-shadow: 0 0 8px var(--blue-light);
+  }
+}
+
+@keyframes scan-move {
+  0%   { top: 10%; }
+  50%  { top: 85%; }
+  100% { top: 10%; }
+}
+
+// Loading spinner sebelum scanner siap
+.scanner-loading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 1;
+}
+
+.scanner-spinner {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--navy-border);
+  border-top-color: var(--blue-light);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.scanner-loading-text {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+// Tombol scan (pakai icon QR, bukan shutter)
+.scan-start-btn {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: var(--navy-mid);
+  border: 3px solid var(--blue-muted);
+  outline: 3px solid rgba(45, 80, 144, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s;
+
+  ion-icon {
+    font-size: 28px;
+    color: var(--blue-light);
+  }
+
+  &:active   { transform: scale(0.94); }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.shutter-label {
+  display: block;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+
+  &.active-label {
+    color: var(--blue-light);
+    animation: label-pulse 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes label-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+// Shutter area layout untuk label
+.shutter-area {
+  flex-direction: column !important;
+  align-items: center;
+}

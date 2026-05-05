@@ -11,7 +11,7 @@ import {
   LoadingController,
   AlertController
 } from '@ionic/angular/standalone';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { SocialLogin } from '@capgo/capacitor-social-login'; // ← MIGRASI: ganti GoogleAuth
 
 import { StorageService } from '../shared/services/storage.service';
 import { ApiService } from '../shared/services/api.service';
@@ -68,7 +68,6 @@ export class LoginPage implements OnInit, OnDestroy {
 
   // Google OAuth
   private readonly WEB_CLIENT_ID = '652723815945-q5m6hss5p6a6s6udi8puoqu0daqklk5c.apps.googleusercontent.com';
-  private googleAuthInitialized: boolean = false;
 
   constructor(
     private toastCtrl: ToastController,
@@ -83,7 +82,7 @@ export class LoginPage implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
-    this.initGoogleAuth();
+    await this.initSocialLogin(); // ← MIGRASI: ganti initGoogleAuth()
     await this.loadChurches();
     await this.checkExistingSession();
   }
@@ -125,20 +124,18 @@ export class LoginPage implements OnInit, OnDestroy {
     }
   }
 
-  // ========== GOOGLE AUTH ==========
-  private initGoogleAuth() {
-    // FIX: Pastikan initialize hanya dipanggil sekali
-    if (this.googleAuthInitialized) return;
-
+  // ========== SOCIAL LOGIN INIT ==========
+  // ← MIGRASI: initGoogleAuth() diganti dengan initSocialLogin()
+  private async initSocialLogin() {
     try {
-      GoogleAuth.initialize({
-        clientId: this.WEB_CLIENT_ID,
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
+      await SocialLogin.initialize({
+        google: {
+          webClientId: this.WEB_CLIENT_ID,
+          mode: 'online',
+        }
       });
-      this.googleAuthInitialized = true;
     } catch (err) {
-      console.warn('GoogleAuth.initialize warning:', err);
+      console.warn('SocialLogin.initialize warning:', err);
     }
   }
 
@@ -465,6 +462,7 @@ export class LoginPage implements OnInit, OnDestroy {
   }
 
   // ========== LOGIN WITH GOOGLE ==========
+  // ← MIGRASI: Seluruh method ini diubah dari GoogleAuth ke SocialLogin
   async loginWithGoogle() {
     const loading = await this.showLoading('Memproses akun Google...');
     let dismissed = false;
@@ -477,20 +475,15 @@ export class LoginPage implements OnInit, OnDestroy {
     };
 
     try {
-      // FIX: Hapus this.initGoogleAuth() di sini — sudah dipanggil di ngOnInit
-      // Memanggil initialize() lebih dari sekali bisa menyebabkan konflik state
+      const result = await SocialLogin.login({
+        provider: 'google',
+        options: {} // scopes dihandle lewat initialize(), tidak perlu dipass di sini
+      });
 
-      // Sign out dulu untuk paksa akun picker muncul
-      try {
-        await GoogleAuth.signOut();
-      } catch {
-        // Abaikan error sign out — tidak apa-apa jika belum login sebelumnya
-      }
-
-      const googleUser = await GoogleAuth.signIn();
-
-      const email: string = (googleUser as any).email || (googleUser as any).profile?.email || '';
-      const name: string = (googleUser as any).name || (googleUser as any).givenName || (googleUser as any).profile?.name || email;
+      // ← MIGRASI: cast ke any karena union type GoogleLoginResponse | GoogleLoginResponseOffline
+      const profile = (result?.result as any)?.profile;
+      const email: string = profile?.email ?? '';
+      const name: string = profile?.name ?? profile?.givenName ?? email;
 
       if (!email) {
         await safeDismiss();
@@ -517,7 +510,6 @@ export class LoginPage implements OnInit, OnDestroy {
         await this.showToast(res.message || 'Login Google gagal. Coba lagi.');
       }
     } catch (err: any) {
-      // FIX: Log error detail agar mudah di-debug
       console.error('Google login error:', err);
       console.error('Google login error message:', err?.message);
       console.error('Google login error code:', err?.code);

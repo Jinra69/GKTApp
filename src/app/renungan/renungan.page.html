@@ -1,13 +1,184 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>renungan</ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>✝️ Renungan</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleDateFilter()">
+        <ion-icon name="calendar-outline" [class.active-filter]="isFilterActive"></ion-icon>
+      </ion-button>
+      <ion-button (click)="refresh()" [disabled]="loading">
+        <ion-icon name="refresh-outline" [class.spinning]="loading"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
+
+  <!-- Date-range filter bar -->
+  <div class="date-filter-bar" *ngIf="showDateFilter">
+    <div class="date-range-row">
+      <div class="date-field">
+        <label class="date-label">Dari</label>
+        <input
+          type="date"
+          class="date-input"
+          [(ngModel)]="filterFrom"
+          [max]="filterTo || ''"
+          (change)="onDateChange()"
+        />
+      </div>
+      <div class="date-sep">—</div>
+      <div class="date-field">
+        <label class="date-label">Sampai</label>
+        <input
+          type="date"
+          class="date-input"
+          [(ngModel)]="filterTo"
+          [min]="filterFrom || ''"
+          (change)="onDateChange()"
+        />
+      </div>
+    </div>
+    <button class="clear-btn" *ngIf="isFilterActive" (click)="clearFilter()">
+      <ion-icon name="close-outline"></ion-icon> Reset
+    </button>
+  </div>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">renungan</ion-title>
-    </ion-toolbar>
-  </ion-header>
+
+  <!-- Skeleton loading -->
+  <div class="card-list" *ngIf="loading">
+    <div class="renungan-card skeleton-card" *ngFor="let s of skeletons">
+      <div class="sk-lines">
+        <div class="sk-line short"></div>
+        <div class="sk-line long"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="!loading && filtered.length === 0">
+    <div class="empty-cross">✝</div>
+    <ion-icon name="book-outline" class="empty-icon"></ion-icon>
+    <p class="empty-text">Belum ada renungan{{ isFilterActive ? ' pada rentang tanggal ini' : '' }}.</p>
+  </div>
+
+  <!-- Card list -->
+  <div class="card-list" *ngIf="!loading && filtered.length > 0">
+    <div
+      class="renungan-card"
+      *ngFor="let item of filtered"
+      [class.card-has-image]="!!item.renungan_bg"
+      [style.background-color]="item.renungan_bg ? 'transparent' : '#ffffff'"
+      [style.background-image]="item.renungan_bg ? 'url(' + item.renungan_bg + ')' : 'none'"
+      (click)="openDetail(item)"
+    >
+      <div class="card-overlay" *ngIf="item.renungan_bg"></div>
+
+      <div class="card-body">
+        <span class="card-date" [class.card-on-image]="!!item.renungan_bg">
+          <ion-icon name="calendar-outline"></ion-icon>
+          {{ item.doc_date | date:'d MMMM yyyy' }}
+        </span>
+        <h3 class="card-title" [class.card-on-image]="!!item.renungan_bg">
+          {{ item.renungan_title }}
+        </h3>
+      </div>
+
+      <div class="card-chevron" [class.card-on-image]="!!item.renungan_bg">
+        <ion-icon name="arrow-forward-outline"></ion-icon>
+      </div>
+    </div>
+  </div>
+
 </ion-content>
+
+<!-- ── Detail full-screen ── -->
+<div class="detail-page" *ngIf="selectedItem" [class.open]="!!selectedItem">
+
+  <!-- Header: background image atau warna navy -->
+  <div
+    class="detail-header"
+    [class.detail-has-image]="!!selectedItem.renungan_bg"
+    [style.background-color]="selectedItem.renungan_bg ? 'transparent' : defaultBg"
+    [style.background-image]="selectedItem.renungan_bg ? 'url(' + selectedItem.renungan_bg + ')' : 'none'"
+  >
+    <div class="detail-header-overlay"></div>
+    <div class="detail-cross-deco">✝</div>
+
+    <!-- Top bar: back button sejajar -->
+    <div class="detail-topbar">
+      <button class="detail-back" (click)="closeDetail()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="detail-header-text">
+      <span class="detail-date">
+        {{ selectedItem.doc_date | date:'EEEE, d MMMM yyyy' }}
+      </span>
+      <h2 class="detail-title">{{ selectedItem.renungan_title }}</h2>
+
+      <!-- ── Play bar ── -->
+      <div class="header-player">
+
+        <!-- Play / Pause button -->
+        <button class="hp-play-btn" (click)="togglePlay()">
+          <span class="hp-play-icon">
+            <ion-icon [name]="ttsPlaying ? 'pause-outline' : 'play-outline'"></ion-icon>
+          </span>
+          <span class="hp-play-label">{{ ttsPlaying ? 'Jeda' : (ttsPaused ? 'Lanjutkan' : 'Putar Renungan') }}</span>
+        </button>
+
+        <!-- Stop — hanya muncul kalau sedang main/jeda -->
+        <button
+          class="hp-stop-btn"
+          *ngIf="ttsPlaying || ttsPaused"
+          (click)="stopTTS()"
+        >
+          <ion-icon name="stop-outline"></ion-icon>
+        </button>
+
+        <!-- Waveform animasi kecil -->
+        <div class="hp-wave" [class.hp-wave-active]="ttsPlaying && !ttsPaused">
+          <span *ngFor="let b of [1,2,3,4,5]"></span>
+        </div>
+
+        <!-- Label suara perempuan -->
+        <span class="hp-voice-badge" *ngIf="!ttsPlaying && !ttsPaused">
+          ♀ halus
+        </span>
+
+      </div>
+
+      <!-- Progress bar tipis di bawah play bar -->
+      <div class="hp-progress-wrap" (click)="seekTo($event)">
+        <div class="hp-progress-track">
+          <div class="hp-progress-fill" [style.width]="ttsProgressPct"></div>
+        </div>
+        <div class="hp-time-row">
+          <span>{{ ttsTimeLabel }}</span>
+          <span>{{ ttsRate }}x</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Isi renungan -->
+  <!-- [attr.data-active-word] menyebabkan Angular re-render saat ttsActiveWordIdx berubah,
+       sehingga CSS selector span.tts-word.tts-active dapat di-update via :global atau
+       kita pakai pendekatan langsung: class "tts-active" pada id="w-N" dikontrol di TS
+       lewat scrollToActiveWord() yang menambah/hapus class DOM langsung. -->
+  <div class="detail-body">
+    <div
+      class="detail-desc"
+      [innerHTML]="formattedDesc(selectedItem.renungan_desc)"
+      [attr.data-active]="ttsActiveWordIdx"
+    ></div>
+  </div>
+
+</div>

@@ -82,7 +82,10 @@ export class ApiService {
   async getAllAnnouncements(ccId: number): Promise<any> {
     return this.post('get_all_announcements', { cc_id: ccId });
   }
-
+  
+  async getRenungan(ccId: number): Promise<any> {
+    return this.post('get_renungan', { cc_id: ccId });
+  }
   async getMobileNotifications(ccId: number): Promise<any> {
     return this.post('get_mobile_notifications', { cc_id: ccId });
   }

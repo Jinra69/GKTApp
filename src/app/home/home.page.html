@@ -7,7 +7,7 @@
     (clickAnnouncement)="onAnnouncementClick($event)">
   </app-announcement-ticker>
 
-  <div class="page-body">
+  <div class="hero-section">
     <div class="greeting-wrap">
       <div class="greeting-left">
         <p class="greeting-hello">Halo, {{ userName }} 👋</p>
@@ -23,7 +23,9 @@
       [loading]="postersLoading"
       (posterClick)="openPosterZoom($event)">
     </app-poster-slider>
+  </div>
 
+  <div class="page-body">
     <h2 class="section-title">Menu Utama</h2>
     <div class="menu-grid-home">
       <div class="menu-row-top">
